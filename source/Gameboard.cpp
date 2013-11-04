@@ -59,7 +59,8 @@ int  Gameboard::generateGem(const IntPair pos, const IntPair leftGems) {
     mt19937 gen(rd());
     // [0, 5]
     uniform_int_distribution<int> distribution(GemColor::BLUE, GemColor::WHITE);
-    if (pos.second >= 2 && pos.second < this->Columns) {
+    int current{-1};
+    if (pos.second >= 2 && pos.second < static_cast<int>(this->Columns)) {
         IntPair upGems{-1, -2};
             if (pos.second >= 2) {
                 // accessed as col, row
@@ -68,20 +69,20 @@ int  Gameboard::generateGem(const IntPair pos, const IntPair leftGems) {
             }
 
         if (upGems.first != upGems.second && leftGems.first != leftGems.second) {
-            return distribution(gen);
+            current = distribution(gen);
         } else {
-            int current = distribution(gen);
-            while ((leftGems.first == leftGems.second && current == leftGems.first)
-                   || (upGems.first == upGems.second && current == upGems.first))
+            do {
                 current = distribution(gen);
-            return current;
+            }while ((leftGems.first == leftGems.second && current == leftGems.first)
+                   || (upGems.first == upGems.second && current == upGems.first));
         }
     } else if (pos.second < 2) {
             int current = distribution(gen);
-            while (current == leftGems.first && current == leftGems.second)
+            do {
                 current = distribution(gen);
-            return current;
+            } while (current == leftGems.first && current == leftGems.second);
     }
+    return current;
 }
 void Gameboard::initBoard() {
     const size_t size = Gem::getSize();

@@ -20,7 +20,7 @@ typedef std::vector<std::unique_ptr<sf::Texture>>     textureVector;
 
 class Gameboard {
 private:
-    const int Columns{8},
+    const size_t Columns{8},
               Rows{8};
     const std::string                 ResDirectory{"res/"};
     const std::vector<std::string>    TextureFiles = {"blue_gem.png",
