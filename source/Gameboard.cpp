@@ -111,9 +111,3 @@ bool Gameboard::loadTextures() {
     }
     return true;
 }
-
-//int main(void) {
-//    Gameboard gameboard;
-//    gameboard.gameLoop();
-//    return 0;
-//}
