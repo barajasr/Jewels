@@ -53,17 +53,17 @@ void Gameboard::gameLoop() {
     }
 }
 
-// pos : col, row
 int  Gameboard::generateGem(const IntPair pos, const IntPair leftGems) {
     random_device rd;
     mt19937 gen(rd());
     // [0, 5]
     uniform_int_distribution<int> distribution(GemColor::BLUE, GemColor::WHITE);
+    // Will cause std::out_of_range exception if errror
     int current{-1};
     if (pos.second >= 2 && pos.second < static_cast<int>(this->Columns)) {
         IntPair upGems{-1, -2};
             if (pos.second >= 2) {
-                // accessed as col, row
+                // Accessed as col, row
                 upGems = IntPair(static_cast<int>(Gems.at(pos.second-1).at(pos.first)->getGemColor()),
                                  static_cast<int>(Gems.at(pos.second-2).at(pos.first)->getGemColor()));
             }
@@ -73,11 +73,11 @@ int  Gameboard::generateGem(const IntPair pos, const IntPair leftGems) {
         } else {
             do {
                 current = distribution(gen);
-            }while ((leftGems.first == leftGems.second && current == leftGems.first)
+            } while ((leftGems.first == leftGems.second && current == leftGems.first)
                    || (upGems.first == upGems.second && current == upGems.first));
         }
     } else if (pos.second < 2) {
-            int current = distribution(gen);
+            current = distribution(gen);
             do {
                 current = distribution(gen);
             } while (current == leftGems.first && current == leftGems.second);
