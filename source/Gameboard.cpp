@@ -55,10 +55,10 @@ void Gameboard::gameLoop() {
 
 int  Gameboard::generateGem(const IntPair pos, const IntPair leftGems) {
     random_device rd;
-    mt19937 gen(rd());
+    mt19937_64 gen(rd());
     // [0, 5]
     uniform_int_distribution<int> distribution(GemColor::BLUE, GemColor::WHITE);
-    // Will cause std::out_of_range exception if errror
+    // Will cause std::out_of_range exception if error
     int current{-1};
     if (pos.second >= 2 && pos.second < static_cast<int>(this->Columns)) {
         IntPair upGems{-1, -2};
