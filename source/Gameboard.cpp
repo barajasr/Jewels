@@ -15,7 +15,8 @@ using namespace sf;
 
 Gameboard::Gameboard() {
     Window = unique_ptr<RenderWindow>(new RenderWindow(VideoMode(320, 320),
-                                                       "Jewels"));
+                                                       "Jewels",
+                                                       sf::Style::Close));
     if (!this->loadTextures()) {
         Error = true;
         return;
@@ -83,6 +84,7 @@ int  Gameboard::generateGem(const IntPair pos, const IntPair leftGems) {
     }
 }
 void Gameboard::initBoard() {
+    const size_t size = Gem::getSize();
     for (size_t row{0}; row < this->Rows; ++row) {                                     
         int first{-1};
         int second{-2}; 
@@ -93,7 +95,7 @@ void Gameboard::initBoard() {
             unique_ptr<Gem> tmp = unique_ptr<Gem>(new Gem());
             tmp->setTexture(Textures.at(current).get());
             tmp->setGemColor(static_cast<GemColor>(current));
-            tmp->setPosition(Vector2f(40*col, 40*row));
+            tmp->setPosition(Vector2f(size*col, size*row));
             sprites.emplace_back(move(tmp));
             second = first;
             first = current;

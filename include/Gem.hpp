@@ -29,8 +29,9 @@ enum class GemState {
 
 class Gem {
 private:
-    GemColor                    Color;
-    GemState                    State;
+    static const size_t         Size{40};
+    GemColor                    Color{GemColor::NONE};
+    GemState                    State{GemState::NORMAL};
     std::unique_ptr<sf::Sprite> GemSprite;
 
 public:
@@ -40,6 +41,7 @@ public:
     void draw(sf::RenderWindow* window);
     GemColor getGemColor() const;
     sf::Vector2f getPosition() const;
+    static size_t getSize();
     GemState getState() const;
     const sf::Texture* getTexture() const;
     void setGemColor(const GemColor color);

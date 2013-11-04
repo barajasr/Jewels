@@ -9,7 +9,7 @@
 using namespace std;
 using namespace sf;
 
-Gem::Gem() : Color{GemColor::NONE}, State(GemState::NORMAL) {
+Gem::Gem() {
     try {
         GemSprite = unique_ptr<Sprite>(new Sprite());
     } catch (const std::bad_alloc& except) {
@@ -37,6 +37,10 @@ GemColor Gem::getGemColor() const {
 }
 Vector2f Gem::getPosition() const {
     return GemSprite->getPosition();
+}
+
+size_t Gem::getSize() {
+    return Size;
 }
 
 GemState Gem::getState() const {
