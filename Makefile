@@ -16,11 +16,11 @@ $(ODIR)/Main.o: $(SDIR)/Main.cpp $(IDIR)/Gameboard.hpp
 	$(CC) $(CFLAGS) -c $(SDIR)/Main.cpp
 	mv Main.o $(ODIR)
 
-$(ODIR)/Gameboard.o: $(SDIR)/Gameboard.cpp $(SDIR)/Gem.cpp
+$(ODIR)/Gameboard.o: $(SDIR)/Gameboard.cpp $(IDIR)/Gameboard.hpp $(SDIR)/Gem.cpp
 	$(CC) $(CFLAGS) -c $(SDIR)/Gameboard.cpp
 	mv Gameboard.o $(ODIR)
 
-$(ODIR)/Gem.o: $(SDIR)/Gem.cpp
+$(ODIR)/Gem.o: $(SDIR)/Gem.cpp $(IDIR)/Gem.hpp
 	$(CC) $(CFLAGS) -c $(SDIR)/Gem.cpp
 	mv Gem.o $(ODIR)
 

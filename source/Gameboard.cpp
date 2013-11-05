@@ -5,6 +5,7 @@
 #include <SFML/Graphics/Sprite.hpp>
 #include <SFML/Graphics/Texture.hpp>
 #include <SFML/Window/Event.hpp>
+#include <SFML/System/Clock.hpp>
 #include <SFML/System/Vector2.hpp>
 
 #include "../include/Gameboard.hpp"
@@ -13,7 +14,7 @@
 using namespace std;
 using namespace sf;
 
-Gameboard::Gameboard() {
+Gameboard::Gameboard() : GameState(State::InitialGems) {
     Window = unique_ptr<RenderWindow>(new RenderWindow(VideoMode(320, 320),
                                                        "Jewels",
                                                        sf::Style::Close));
@@ -23,6 +24,7 @@ Gameboard::Gameboard() {
     }
 
     this->initBoard();
+    GameClock = std::unique_ptr<Clock>(new Clock());
 }
 
 Gameboard::~Gameboard() = default;
@@ -45,6 +47,7 @@ void Gameboard::gameLoop() {
             if (event.type == Event::Closed)                                     
                 Window->close();                                                          
         }                                                                            
+        this->update();
 
         Window->clear(Color::Green);                                              
         Window->draw(background);
@@ -57,7 +60,7 @@ int  Gameboard::generateGem(const IntPair pos, const IntPair leftGems) {
     random_device rd;
     mt19937_64 gen(rd());
     // [0, 5]
-    uniform_int_distribution<int> distribution(GemColor::BLUE, GemColor::WHITE);
+    uniform_int_distribution<int> distribution(GemColor::Blue, GemColor::White);
     // Will cause std::out_of_range exception if error
     int current{-1};
     if (pos.second >= 2 && pos.second < static_cast<int>(this->Columns)) {
@@ -77,7 +80,6 @@ int  Gameboard::generateGem(const IntPair pos, const IntPair leftGems) {
                    || (upGems.first == upGems.second && current == upGems.first));
         }
     } else if (pos.second < 2) {
-            current = distribution(gen);
             do {
                 current = distribution(gen);
             } while (current == leftGems.first && current == leftGems.second);
@@ -96,13 +98,31 @@ void Gameboard::initBoard() {
             unique_ptr<Gem> tmp = unique_ptr<Gem>(new Gem());
             tmp->setTexture(Textures.at(current).get());
             tmp->setGemColor(static_cast<GemColor>(current));
-            tmp->setPosition(Vector2f(size*col, size*row));
+            // Gems above board, for drop sequence
+            tmp->setPosition(Vector2f(size*col, -320+static_cast<int>(size*row)));
             sprites.emplace_back(move(tmp));
             second = first;
             first = current;
         } 
         Gems.emplace_back(move(sprites));
     }
+}
+
+bool Gameboard::initialDrop() {
+    Time elapsed = GameClock->getElapsedTime();
+    float dropStep{400.0f}; 
+    for (auto& row : Gems) {
+        for (auto& gem : row) {
+            auto pos = gem->getPosition();
+            pos.y = pos.y + dropStep*elapsed.asSeconds();
+            gem->setPosition(pos);
+        }
+    }
+
+    const auto first = Gems.at(0).at(0)->getPosition();
+    GameClock->restart();
+    return first.y >= 0;
+
 }
 
 bool Gameboard::loadTextures() {
@@ -113,4 +133,11 @@ bool Gameboard::loadTextures() {
             return false;
     }
     return true;
+}
+
+void Gameboard::update() {
+    if (GameState == State::InitialGems) {
+        if (this->initialDrop()) 
+            GameState = State::Idle;
+    }
 }

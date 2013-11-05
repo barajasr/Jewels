@@ -12,26 +12,26 @@ namespace sf {
 }
 
 enum GemColor {
-    BLUE,
-    GREEN,
-    ORANGE,
-    PURPLE,
-    RED,
-    WHITE,
-    NONE
+    Blue,
+    Green,
+    Orange,
+    Purple,
+    Red,
+    White,
+    None
 };
 
 enum class GemState {
-    NORMAL,
-    FIRE,
-    STAR,
+    Normal,
+    Fire,
+    Star,
 };
 
 class Gem {
 private:
     static const size_t         Size{40};
-    GemColor                    Color{GemColor::NONE};
-    GemState                    State{GemState::NORMAL};
+    GemColor                    Color{GemColor::None};
+    GemState                    State{GemState::Normal};
     std::unique_ptr<sf::Sprite> GemSprite;
 
 public:
