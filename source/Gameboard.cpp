@@ -97,7 +97,8 @@ void Gameboard::initBoard() {
             unique_ptr<Gem> tmp = unique_ptr<Gem>(new Gem());
             tmp->setTexture(Textures.at(current).get());
             tmp->setGemColor(static_cast<GemColor>(current));
-            tmp->setPosition(Vector2f(size*col, -320+static_cast<int>(size*row)));
+            // Place off board for drop sequence
+            tmp->setPosition(Vector2f(size*col, -static_cast<int>(size*2)));
             sprites.emplace_back(move(tmp));
             second = first;
             first = current;
@@ -115,19 +116,23 @@ bool Gameboard::initialDrop() {
     float dropStep{400.0f}; 
     for (int row{static_cast<int>(Rows)-1}; row >= 0; --row) {
         if (startDrop.at(row)){
-            Vector2f pos;
+            Vector2f pos = Gems.at(row).at(0)->getPosition();
+            auto offset = dropStep*elapsed.asSeconds();
+            // Adjust if offset went too far
+            if (pos.y + offset >= Gem::getSize()*row) {
+                offset = Gem::getSize()*row - pos.y;
+                startDrop.at(row) = false;
+            }
             for (size_t col{0}; col < Columns; ++col) {
                     pos = Gems.at(row).at(col)->getPosition();
-                    pos.y = pos.y + dropStep*elapsed.asSeconds();
+                    pos.y += offset;
                     Gems.at(row).at(col)->setPosition(pos);
             }
 
-            if (row > 0 && pos.y >= Gem::getSize()/2 &&
-                pos.y < Gem::getSize()) {
+            // When to start dropping row above
+            if (row > 0 && pos.y < Gem::getSize() && pos.y >= Gem::getSize()/2) {
                 startDrop.at(row-1) = true;
-            } else if(pos.y >= Gem::getSize()*row) {
-                startDrop.at(row) = false;
-            }
+            } 
         }
     }
 
