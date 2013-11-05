@@ -66,7 +66,6 @@ int  Gameboard::generateGem(const IntPair pos, const IntPair leftGems) {
     if (pos.second >= 2 && pos.second < static_cast<int>(this->Columns)) {
         IntPair upGems{-1, -2};
             if (pos.second >= 2) {
-                // Accessed as col, row
                 upGems = IntPair(static_cast<int>(Gems.at(pos.second-1).at(pos.first)->getGemColor()),
                                  static_cast<int>(Gems.at(pos.second-2).at(pos.first)->getGemColor()));
             }
@@ -98,7 +97,6 @@ void Gameboard::initBoard() {
             unique_ptr<Gem> tmp = unique_ptr<Gem>(new Gem());
             tmp->setTexture(Textures.at(current).get());
             tmp->setGemColor(static_cast<GemColor>(current));
-            // Gems above board, for drop sequence
             tmp->setPosition(Vector2f(size*col, -320+static_cast<int>(size*row)));
             sprites.emplace_back(move(tmp));
             second = first;
@@ -109,19 +107,32 @@ void Gameboard::initBoard() {
 }
 
 bool Gameboard::initialDrop() {
+    static vector<bool> startDrop{false, false, false,
+                                  false, false, false,
+                                  false, true};
+
     Time elapsed = GameClock->getElapsedTime();
     float dropStep{400.0f}; 
-    for (auto& row : Gems) {
-        for (auto& gem : row) {
-            auto pos = gem->getPosition();
-            pos.y = pos.y + dropStep*elapsed.asSeconds();
-            gem->setPosition(pos);
+    for (int row{static_cast<int>(Rows)-1}; row >= 0; --row) {
+        if (startDrop.at(row)){
+            Vector2f pos;
+            for (size_t col{0}; col < Columns; ++col) {
+                    pos = Gems.at(row).at(col)->getPosition();
+                    pos.y = pos.y + dropStep*elapsed.asSeconds();
+                    Gems.at(row).at(col)->setPosition(pos);
+            }
+
+            if (row > 0 && pos.y >= Gem::getSize()/2 &&
+                pos.y < Gem::getSize()) {
+                startDrop.at(row-1) = true;
+            } else if(pos.y >= Gem::getSize()*row) {
+                startDrop.at(row) = false;
+            }
         }
     }
 
-    const auto first = Gems.at(0).at(0)->getPosition();
     GameClock->restart();
-    return first.y >= 0;
+    return Gems.at(0).at(0)->getPosition().y >= 0;
 
 }
 
