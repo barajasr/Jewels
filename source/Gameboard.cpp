@@ -6,7 +6,6 @@
 #include <SFML/Graphics/Texture.hpp>
 #include <SFML/Window/Event.hpp>
 #include <SFML/System/Clock.hpp>
-#include <SFML/System/Vector2.hpp>
 
 #include "../include/Gameboard.hpp"
 #include "../include/Gem.hpp"
@@ -23,6 +22,8 @@ Gameboard::Gameboard() : GameState(State::InitialGems) {
         return;
     }
 
+    TileMap = unique_ptr<Sprite>(new Sprite(*Textures.back().get()));
+    Selection = unique_ptr<Sprite>(new Sprite(*Textures.at(Textures.size()-2).get()));
     this->initBoard();
     GameClock = std::unique_ptr<Clock>(new Clock());
 }
@@ -33,27 +34,51 @@ void Gameboard::drawBoard() {
     for (auto& row : Gems)
         for (auto& gem : row)
             gem->draw(Window.get());
+
+    if (GameState == State::SelectedGem)
+        Window->draw(*Selection.get());
 }
 
 void Gameboard::gameLoop() {
     if (Error)
         return;
 
-    Sprite background(*Textures.back().get());
 
     while (Window->isOpen()) {
-        Event event;                                                             
-        while (Window->pollEvent(event)) {                                            
-            if (event.type == Event::Closed)                                     
-                Window->close();                                                          
-        }                                                                            
+        Event event;
+        while (Window->pollEvent(event)) {
+            if (event.type == Event::Closed) {
+                Window->close();
+            } else if(event.type == Event::MouseButtonPressed) {
+                if (Mouse::isButtonPressed(Mouse::Button::Left)) {
+                    Vector2i pos{Mouse::getPosition(*Window.get())};
+                    if(this->gemSelected(pos))
+                        this->GameState = State::SelectedGem;
+                }
+            }
+        }
         this->update();
 
-        Window->clear(Color::Green);                                              
-        Window->draw(background);
+        Window->clear(Color::Green);
+        Window->draw(*TileMap.get());
         this->drawBoard();
         Window->display();
     }
+}
+
+bool Gameboard::gemSelected(const Vector2i& pos) {
+    bool selected{false};
+    const auto tileBounds = TileMap->getGlobalBounds();
+    if (pos.x > tileBounds.left && pos.x < tileBounds.width
+        && pos.y > tileBounds.top && pos.y < tileBounds.height) {
+        selected = true;
+        const auto selectionPos = Gems.at((int)pos.y/Gem::getSize())
+                                      .at((int)pos.x/Gem::getSize())
+                                      ->getPosition();
+        Selection->setPosition(selectionPos);
+        GameState = State::SelectedGem;
+    }
+    return selected;
 }
 
 int  Gameboard::generateGem(const IntPair pos, const IntPair leftGems) {

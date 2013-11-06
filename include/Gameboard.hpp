@@ -6,6 +6,8 @@
 #include <utility>
 #include <vector>
 
+#include <SFML/System/Vector2.hpp>
+
 namespace sf {
     class Clock;
     class RenderWindow;
@@ -38,15 +40,19 @@ private:
                                                       "purple_gem.png",
                                                       "red_gem.png",
                                                       "white_gem.png",
+                                                      "selected.png",
                                                       "tile_board_transparent.png"};
     bool                              Error{false};
     State                             GameState;
     std::unique_ptr<sf::Clock>        GameClock;
     std::unique_ptr<sf::RenderWindow> Window;
+    std::unique_ptr<sf::Sprite>       TileMap;
+    std::unique_ptr<sf::Sprite>       Selection;
     textureVector                     Textures;
     gemVectors                        Gems;
 
     void drawBoard();
+    bool gemSelected(const sf::Vector2i& pos);
     void initBoard();
     bool initialDrop();
     bool loadTextures();
