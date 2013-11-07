@@ -24,11 +24,19 @@ Gameboard::Gameboard() : GameState(State::InitialGems) {
 
     TileMap = unique_ptr<Sprite>(new Sprite(*Textures.back().get()));
     Selection = unique_ptr<Sprite>(new Sprite(*Textures.at(Textures.size()-2).get()));
+    SelectedGem = Vector2i{-1, -1};
     this->initBoard();
     GameClock = std::unique_ptr<Clock>(new Clock());
 }
 
 Gameboard::~Gameboard() = default;
+
+bool Gameboard::areNeighbors(const Vector2i first, const Vector2i second) const {
+    return (first.x+1 == second.x && first.y == second.y) 
+           || (first.x-1 == second.x && first.y == second.y)
+           || (first.x == second.x && first.y+1 == second.y)
+           || (first.x == second.x && first.y-1 == second.y);
+}
 
 void Gameboard::drawBoard() {
     for (auto& row : Gems)
@@ -43,20 +51,17 @@ void Gameboard::gameLoop() {
     if (Error)
         return;
 
-
     while (Window->isOpen()) {
         Event event;
         while (Window->pollEvent(event)) {
             if (event.type == Event::Closed) {
                 Window->close();
             } else if(event.type == Event::MouseButtonPressed) {
-                if (Mouse::isButtonPressed(Mouse::Button::Left)) {
-                    Vector2i pos{Mouse::getPosition(*Window.get())};
-                    if(this->gemSelected(pos))
-                        this->GameState = State::SelectedGem;
-                }
+                if (Mouse::isButtonPressed(Mouse::Button::Left))
+                    this->processClick();
             }
         }
+
         this->update();
 
         Window->clear(Color::Green);
@@ -66,22 +71,7 @@ void Gameboard::gameLoop() {
     }
 }
 
-bool Gameboard::gemSelected(const Vector2i& pos) {
-    bool selected{false};
-    const auto tileBounds = TileMap->getGlobalBounds();
-    if (pos.x > tileBounds.left && pos.x < tileBounds.width
-        && pos.y > tileBounds.top && pos.y < tileBounds.height) {
-        selected = true;
-        const auto selectionPos = Gems.at((int)pos.y/Gem::getSize())
-                                      .at((int)pos.x/Gem::getSize())
-                                      ->getPosition();
-        Selection->setPosition(selectionPos);
-        GameState = State::SelectedGem;
-    }
-    return selected;
-}
-
-int  Gameboard::generateGem(const IntPair pos, const IntPair leftGems) {
+int Gameboard::generateGem(const IntPair pos, const IntPair leftGems) const{
     random_device rd;
     mt19937_64 gen(rd());
     // [0, 5]
@@ -110,6 +100,24 @@ int  Gameboard::generateGem(const IntPair pos, const IntPair leftGems) {
     }
     return current;
 }
+
+// Returns position (in pixels) of element found containing indices (row, col)
+Vector2f Gameboard::getGemPosition(const sf::Vector2i indices) const{
+    return Gems.at(indices.x).at(indices.y)->getPosition();
+}
+
+// Given (x,y) pixels coordinate, return (row, col) of Gem location
+Vector2i Gameboard::getMatrixIndices(const sf::Vector2i pixels) const {
+    return Vector2i(pixels.y/Gem::getSize(), pixels.x/Gem::getSize());
+}
+
+
+bool Gameboard::isGemSelected(const Vector2i pos) {
+    const auto tileBounds = TileMap->getGlobalBounds();
+    return  (pos.x > tileBounds.left && pos.x < tileBounds.width
+             && pos.y > tileBounds.top && pos.y < tileBounds.height);
+}
+
 void Gameboard::initBoard() {
     const size_t size = Gem::getSize();
     for (size_t row{0}; row < this->Rows; ++row) {                                     
@@ -174,6 +182,33 @@ bool Gameboard::loadTextures() {
             return false;
     }
     return true;
+}
+
+void Gameboard::processClick() {
+    if (GameState == State::InitialGems)
+        return;
+
+    Vector2i mousePosition{Mouse::getPosition(*Window.get())};
+    if(this->isGemSelected(mousePosition)) {
+        auto indices = this->getMatrixIndices(mousePosition);
+        auto newSelectionPosition = this->getGemPosition(indices);
+        
+        if(SelectedGem.x != newSelectionPosition.x ||
+           SelectedGem.y != newSelectionPosition.y) {
+            if (this->areNeighbors(SelectedGem, indices)){
+                GameState = State::Idle;
+                // Set to swap gems
+
+                SelectedGem.x = -1;
+                SelectedGem.y = -1;
+            } else {
+                Selection->setPosition(newSelectionPosition);
+                this->SelectedGem.x = indices.x;
+                this->SelectedGem.y = indices.y;
+                GameState = State::SelectedGem;
+            }
+        }
+    }
 }
 
 void Gameboard::update() {

@@ -48,15 +48,20 @@ private:
     std::unique_ptr<sf::RenderWindow> Window;
     std::unique_ptr<sf::Sprite>       TileMap;
     std::unique_ptr<sf::Sprite>       Selection;
+    sf::Vector2i                      SelectedGem;
     textureVector                     Textures;
     gemVectors                        Gems;
 
     void drawBoard();
-    bool gemSelected(const sf::Vector2i& pos);
+    int generateGem(const IntPair pos, const IntPair leftGems) const;
+    sf::Vector2f getGemPosition(const sf::Vector2i indices) const;
+    sf::Vector2i getMatrixIndices(const sf::Vector2i pixels) const;
+    bool isGemSelected(const sf::Vector2i pos);
+    bool areNeighbors(const sf::Vector2i first, const sf::Vector2i second) const;
     void initBoard();
     bool initialDrop();
     bool loadTextures();
-    int  generateGem(const IntPair pos, const IntPair leftGems);
+    void processClick();
     void update();
 public:
     Gameboard();

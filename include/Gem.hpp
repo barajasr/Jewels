@@ -25,6 +25,8 @@ enum class GemState {
     Normal,
     Fire,
     Star,
+    Falling,
+    Swapping
 };
 
 class Gem {
