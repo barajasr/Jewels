@@ -1,6 +1,7 @@
 #ifndef __GAMEBOARD_HPP__
 #define __GAMEBOARD_HPP__
 
+#include <deque>
 #include <memory>
 #include <string>
 #include <utility>
@@ -23,16 +24,30 @@ typedef std::vector<std::unique_ptr<sf::Texture>>     textureVector;
 
 class Gameboard {
 private:
-    enum class State{
-        InitialGems,
-        Idle,
-        SelectedGem,
-        ChangingGems,
-        DisappearingGems,
-        FallingGems,
+    enum State{
+        Idle             = (1 << 0),
+        InitialGems      = (1 << 1),
+        GemSelected      = (1 << 2),
+        GemSwap          = (1 << 3),
+        DisappearingGems = (1 << 4),
+        FallingGems      = (1 << 5)
     };
-    const size_t Columns{8},
-                 Rows{8};
+
+    struct SwappingGems{
+        sf::Vector2i firstGem{-1, -1};
+        sf::Vector2i secondGem{-1, -1};
+        sf::Vector2f firstEndPos{0.0f, 0.0f};
+        sf::Vector2f secondEndPos{0.0f, 0.0f};
+        bool         done{false};
+        SwappingGems(const sf::Vector2i firstIndices, const sf::Vector2i secondIndices, const sf::Vector2f firstEnd, const sf::Vector2f secondEnd)
+            : firstGem{firstIndices}, secondGem{secondIndices}, firstEndPos{firstEnd}, secondEndPos{secondEnd}, done{false} {}
+
+    };
+
+    const size_t Columns{8};
+    const size_t Rows{8};
+    const size_t Height{320};
+    const size_t Width{320};
     const std::string                 ResDirectory{"res/"};
     const std::vector<std::string>    TextureFiles = {"blue_gem.png",
                                                       "green_gem.png",
@@ -43,7 +58,7 @@ private:
                                                       "selected.png",
                                                       "tile_board_transparent.png"};
     bool                              Error{false};
-    State                             GameState;
+    char                              GameState;
     std::unique_ptr<sf::Clock>        GameClock;
     std::unique_ptr<sf::RenderWindow> Window;
     std::unique_ptr<sf::Sprite>       TileMap;
@@ -51,6 +66,7 @@ private:
     sf::Vector2i                      SelectedGem;
     textureVector                     Textures;
     gemVectors                        Gems;
+    std::deque<SwappingGems>          SwappingGems;
 
     void drawBoard();
     int generateGem(const IntPair pos, const IntPair leftGems) const;
@@ -62,6 +78,7 @@ private:
     bool initialDrop();
     bool loadTextures();
     void processClick();
+    void swapAnimation();
     void update();
 public:
     Gameboard();

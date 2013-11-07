@@ -25,6 +25,14 @@ Gem::Gem(const Texture* texture, const GemColor color, const GemState state) : G
         GemSprite->setTexture(*texture);
 }
 
+void Gem::addState(const GemState state) {
+    if ((this->State & GemState::Normal) == GemState::Normal
+       && (state == Fire || state == Star))
+        this->State ^= GemState::Normal;
+        
+    this->State |= state;
+}
+
 Gem::~Gem() = default;
 
 void Gem::draw(RenderWindow* window) {
@@ -43,7 +51,7 @@ size_t Gem::getSize() {
     return Size;
 }
 
-GemState Gem::getState() const {
+char Gem::getState() const {
     return this->State;
 }
 
@@ -51,6 +59,9 @@ const Texture* Gem::getTexture() const {
     return GemSprite->getTexture();
 }
 
+void Gem::removeState(const GemState state) {
+    this->State ^= state;
+}
 void Gem::setPosition(const Vector2f& pos) {
     GemSprite->setPosition(pos);
 }
@@ -59,10 +70,6 @@ void Gem::setGemColor(const GemColor color) {
     this->Color = color;
 }
 
-void Gem::setState(const GemState state) {
-    this->State = state;
-    // TODO side effects
-}
 
 void Gem::setTexture(const Texture* texture) {
     GemSprite->setTexture(*texture);

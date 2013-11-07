@@ -21,34 +21,35 @@ enum GemColor {
     None
 };
 
-enum class GemState {
-    Normal,
-    Fire,
-    Star,
-    Falling,
-    Swapping
+enum GemState {
+    Normal   = (1 << 0),
+    Fire     = (1 << 1),
+    Star     = (1 << 2),
+    Falling  = (1 << 3),
+    Swapping = (1 << 4)
 };
 
 class Gem {
 private:
     static const size_t         Size{40};
     GemColor                    Color{GemColor::None};
-    GemState                    State{GemState::Normal};
+    char                        State{GemState::Normal};
     std::unique_ptr<sf::Sprite> GemSprite;
 
 public:
     Gem();
     ~Gem();
     Gem(const sf::Texture* texture, const GemColor color, const GemState state );
+    void addState(const GemState state);
     void draw(sf::RenderWindow* window);
     GemColor getGemColor() const;
     sf::Vector2f getPosition() const;
     static size_t getSize();
-    GemState getState() const;
+    char getState() const;
     const sf::Texture* getTexture() const;
+    void removeState(const GemState toRemove);
     void setGemColor(const GemColor color);
     void setPosition(const sf::Vector2f& pos);
-    void setState(const GemState state);
     void setTexture(const sf::Texture* texture);
     void update();
 };

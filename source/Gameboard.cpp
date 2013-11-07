@@ -14,7 +14,7 @@ using namespace std;
 using namespace sf;
 
 Gameboard::Gameboard() : GameState(State::InitialGems) {
-    Window = unique_ptr<RenderWindow>(new RenderWindow(VideoMode(320, 320),
+    Window = unique_ptr<RenderWindow>(new RenderWindow(VideoMode(Height, Width),
                                                        "Jewels",
                                                        sf::Style::Close));
     if (!this->loadTextures()) {
@@ -43,7 +43,7 @@ void Gameboard::drawBoard() {
         for (auto& gem : row)
             gem->draw(Window.get());
 
-    if (GameState == State::SelectedGem)
+    if ((GameState & State::GemSelected) == State::GemSelected)
         Window->draw(*Selection.get());
 }
 
@@ -101,7 +101,7 @@ int Gameboard::generateGem(const IntPair pos, const IntPair leftGems) const{
     return current;
 }
 
-// Returns position (in pixels) of element found containing indices (row, col)
+// Returns position (in pixels) of element found at indices (row, col)
 Vector2f Gameboard::getGemPosition(const sf::Vector2i indices) const{
     return Gems.at(indices.x).at(indices.y)->getPosition();
 }
@@ -147,10 +147,10 @@ bool Gameboard::initialDrop() {
 
     Time elapsed = GameClock->getElapsedTime();
     float dropStep{400.0f}; 
+    auto offset = dropStep*elapsed.asSeconds();
     for (int row{static_cast<int>(Rows)-1}; row >= 0; --row) {
         if (startDrop.at(row)){
             Vector2f pos = Gems.at(row).at(0)->getPosition();
-            auto offset = dropStep*elapsed.asSeconds();
             // Adjust if offset went too far
             if (pos.y + offset >= Gem::getSize()*row) {
                 offset = Gem::getSize()*row - pos.y;
@@ -185,35 +185,140 @@ bool Gameboard::loadTextures() {
 }
 
 void Gameboard::processClick() {
-    if (GameState == State::InitialGems)
+    if ((GameState & State::InitialGems) == State::InitialGems)
         return;
 
     Vector2i mousePosition{Mouse::getPosition(*Window.get())};
     if(this->isGemSelected(mousePosition)) {
         auto indices = this->getMatrixIndices(mousePosition);
+        char state = Gems.at(indices.x).at(indices.y)->getState();
+        if ((state & GemState::Swapping) == GemState::Swapping)
+            return;
+
         auto newSelectionPosition = this->getGemPosition(indices);
         
         if(SelectedGem.x != newSelectionPosition.x ||
            SelectedGem.y != newSelectionPosition.y) {
             if (this->areNeighbors(SelectedGem, indices)){
-                GameState = State::Idle;
+                
                 // Set to swap gems
+                SwappingGems.emplace_back(SelectedGem,
+                                       indices,
+                                       this->getGemPosition(indices),
+                                       this->getGemPosition(SelectedGem));
+                Gems.at(indices.x).at(indices.y)->addState(GemState::Swapping);
+                Gems.at(SelectedGem.x).at(SelectedGem.y)->addState(GemState::Swapping);
 
                 SelectedGem.x = -1;
                 SelectedGem.y = -1;
+                // Change State and restart clock if needed
+                GameState ^= State::GemSelected;
+                GameState |= State::GemSwap;
+                if (State::Idle == (GameState & State::Idle)) {
+                    GameClock->restart();
+                }
             } else {
                 Selection->setPosition(newSelectionPosition);
                 this->SelectedGem.x = indices.x;
                 this->SelectedGem.y = indices.y;
-                GameState = State::SelectedGem;
+                GameState |= State::GemSelected;
             }
         }
     }
 }
 
+void Gameboard::swapAnimation() {
+    auto elapsed = GameClock->getElapsedTime();
+    const float step = 200.0f;
+    const float offset = step * elapsed.asSeconds();
+    for (auto& swapable: SwappingGems) {
+        auto one = Gems.at(swapable.firstGem.x).at(swapable.firstGem.y).get();
+        auto onePos = one->getPosition();
+        auto two = Gems.at(swapable.secondGem.x).at(swapable.secondGem.y).get();
+        auto twoPos = two->getPosition();
+
+        // Swap horizontally
+        if (swapable.firstGem.x == swapable.secondGem.x) {
+            if (swapable.firstGem.y < swapable.secondGem.y ) {
+                if (onePos.x+offset < swapable.firstEndPos.x) {
+                    one->setPosition(Vector2f(onePos.x+offset, onePos.y));
+                    two->setPosition(Vector2f(twoPos.x-offset, twoPos.y));
+                } else { 
+                    one->setPosition(swapable.firstEndPos);
+                    two->setPosition(swapable.secondEndPos);
+                    one->removeState(GemState::Swapping);
+                    two->removeState(GemState::Swapping);
+                    Gems.at(swapable.firstGem.x)
+                        .at(swapable.firstGem.y)
+                        .swap(Gems.at(swapable.secondGem.x)
+                                  .at(swapable.secondGem.y));
+                    swapable.done = true;
+                }
+            } else {
+                if (onePos.x-offset > swapable.firstEndPos.x) {
+                    one->setPosition(Vector2f(onePos.x-offset, onePos.y));
+                    two->setPosition(Vector2f(twoPos.x+offset, twoPos.y));
+                } else { 
+                    one->setPosition(swapable.firstEndPos);
+                    two->setPosition(swapable.secondEndPos);
+                    one->removeState(GemState::Swapping);
+                    two->removeState(GemState::Swapping);
+                    Gems.at(swapable.firstGem.x)
+                        .at(swapable.firstGem.y)
+                        .swap(Gems.at(swapable.secondGem.x)
+                                  .at(swapable.secondGem.y));
+                    swapable.done = true;
+                }
+            }
+        } else {    // Swap vertically
+            if (swapable.firstGem.x < swapable.secondGem.x ) {
+                if (onePos.y+offset < swapable.firstEndPos.y) {
+                    one->setPosition(Vector2f(onePos.x, onePos.y+offset));
+                    two->setPosition(Vector2f(twoPos.x, twoPos.y-offset));
+                } else { 
+                    one->setPosition(swapable.firstEndPos);
+                    two->setPosition(swapable.secondEndPos);
+                    one->removeState(GemState::Swapping);
+                    two->removeState(GemState::Swapping);
+                    Gems.at(swapable.firstGem.x)
+                        .at(swapable.firstGem.y)
+                        .swap(Gems.at(swapable.secondGem.x)
+                                  .at(swapable.secondGem.y));
+                    swapable.done = true;
+                }
+            } else {
+                if (onePos.y-offset > swapable.firstEndPos.y) {
+                    one->setPosition(Vector2f(onePos.x, onePos.y-offset));
+                    two->setPosition(Vector2f(twoPos.x, twoPos.y+offset));
+                } else { 
+                    one->setPosition(swapable.firstEndPos);
+                    two->setPosition(swapable.secondEndPos);
+                    one->removeState(GemState::Swapping);
+                    two->removeState(GemState::Swapping);
+                    Gems.at(swapable.firstGem.x)
+                        .at(swapable.firstGem.y)
+                        .swap(Gems.at(swapable.secondGem.x)
+                                  .at(swapable.secondGem.y));
+                    swapable.done = true;
+                }
+            }
+        }
+    }
+
+    while (!SwappingGems.empty() && SwappingGems.front().done)
+        SwappingGems.pop_front();
+
+    if (SwappingGems.empty())
+        GameState ^= State::GemSwap;
+    GameClock->restart();
+}
+
 void Gameboard::update() {
-    if (GameState == State::InitialGems) {
+    if ((GameState & State::InitialGems) == State::InitialGems) {
         if (this->initialDrop()) 
             GameState = State::Idle;
     }
+
+    if ((GameState & State::GemSwap) == State::GemSwap)
+        this->swapAnimation();
 }
