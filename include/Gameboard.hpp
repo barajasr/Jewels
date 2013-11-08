@@ -33,7 +33,7 @@ private:
         FallingGems      = (1 << 5)
     };
 
-    struct SwappingGems{
+    typedef struct SwappingGems {
         sf::Vector2i firstGem{-1, -1};
         sf::Vector2i secondGem{-1, -1};
         sf::Vector2f firstEndPos{0.0f, 0.0f};
@@ -42,7 +42,7 @@ private:
         SwappingGems(const sf::Vector2i firstIndices, const sf::Vector2i secondIndices, const sf::Vector2f firstEnd, const sf::Vector2f secondEnd)
             : firstGem{firstIndices}, secondGem{secondIndices}, firstEndPos{firstEnd}, secondEndPos{secondEnd}, done{false} {}
 
-    };
+    } SwappingGems;
 
     const size_t Columns{8};
     const size_t Rows{8};
@@ -66,14 +66,15 @@ private:
     sf::Vector2i                      SelectedGem;
     textureVector                     Textures;
     gemVectors                        Gems;
-    std::deque<SwappingGems>          SwappingGems;
+    std::deque<SwappingGems>          SwappingGemsList;
 
+    bool areNeighbors(const sf::Vector2i first, const sf::Vector2i second) const;
     void drawBoard();
+    void finalizeSwap(SwappingGems& gems);
     int generateGem(const IntPair pos, const IntPair leftGems) const;
     sf::Vector2f getGemPosition(const sf::Vector2i indices) const;
     sf::Vector2i getMatrixIndices(const sf::Vector2i pixels) const;
     bool isGemSelected(const sf::Vector2i pos);
-    bool areNeighbors(const sf::Vector2i first, const sf::Vector2i second) const;
     void initBoard();
     bool initialDrop();
     bool loadTextures();

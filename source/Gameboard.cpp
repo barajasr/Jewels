@@ -47,6 +47,19 @@ void Gameboard::drawBoard() {
         Window->draw(*Selection.get());
 }
 
+void Gameboard::finalizeSwap(SwappingGems& gems) {
+    auto one = Gems.at(gems.firstGem.x).at(gems.firstGem.y).get();
+    auto two = Gems.at(gems.secondGem.x).at(gems.secondGem.y).get();
+    one->setPosition(gems.firstEndPos);
+    two->setPosition(gems.secondEndPos);
+    one->removeState(GemState::Swapping);
+    two->removeState(GemState::Swapping);
+    Gems.at(gems.firstGem.x).at(gems.firstGem.y)
+        .swap(Gems.at(gems.secondGem.x).at(gems.secondGem.y));
+    gems.done = true;
+
+}
+
 void Gameboard::gameLoop() {
     if (Error)
         return;
@@ -202,7 +215,7 @@ void Gameboard::processClick() {
             if (this->areNeighbors(SelectedGem, indices)){
                 
                 // Set to swap gems
-                SwappingGems.emplace_back(SelectedGem,
+                SwappingGemsList.emplace_back(SelectedGem,
                                        indices,
                                        this->getGemPosition(indices),
                                        this->getGemPosition(SelectedGem));
@@ -228,87 +241,50 @@ void Gameboard::processClick() {
 }
 
 void Gameboard::swapAnimation() {
-    auto elapsed = GameClock->getElapsedTime();
-    const float step = 200.0f;
-    const float offset = step * elapsed.asSeconds();
-    for (auto& swapable: SwappingGems) {
-        auto one = Gems.at(swapable.firstGem.x).at(swapable.firstGem.y).get();
+    const auto elapsed = GameClock->getElapsedTime();
+    const float step = 400.0f;
+    float offset = step * elapsed.asSeconds();
+    for (auto& swappable: SwappingGemsList) {
+        auto one = Gems.at(swappable.firstGem.x).at(swappable.firstGem.y).get();
         auto onePos = one->getPosition();
-        auto two = Gems.at(swapable.secondGem.x).at(swapable.secondGem.y).get();
+        auto two = Gems.at(swappable.secondGem.x).at(swappable.secondGem.y).get();
         auto twoPos = two->getPosition();
 
         // Swap horizontally
-        if (swapable.firstGem.x == swapable.secondGem.x) {
-            if (swapable.firstGem.y < swapable.secondGem.y ) {
-                if (onePos.x+offset < swapable.firstEndPos.x) {
-                    one->setPosition(Vector2f(onePos.x+offset, onePos.y));
-                    two->setPosition(Vector2f(twoPos.x-offset, twoPos.y));
-                } else { 
-                    one->setPosition(swapable.firstEndPos);
-                    two->setPosition(swapable.secondEndPos);
-                    one->removeState(GemState::Swapping);
-                    two->removeState(GemState::Swapping);
-                    Gems.at(swapable.firstGem.x)
-                        .at(swapable.firstGem.y)
-                        .swap(Gems.at(swapable.secondGem.x)
-                                  .at(swapable.secondGem.y));
-                    swapable.done = true;
-                }
-            } else {
-                if (onePos.x-offset > swapable.firstEndPos.x) {
-                    one->setPosition(Vector2f(onePos.x-offset, onePos.y));
-                    two->setPosition(Vector2f(twoPos.x+offset, twoPos.y));
-                } else { 
-                    one->setPosition(swapable.firstEndPos);
-                    two->setPosition(swapable.secondEndPos);
-                    one->removeState(GemState::Swapping);
-                    two->removeState(GemState::Swapping);
-                    Gems.at(swapable.firstGem.x)
-                        .at(swapable.firstGem.y)
-                        .swap(Gems.at(swapable.secondGem.x)
-                                  .at(swapable.secondGem.y));
-                    swapable.done = true;
-                }
+        if (swappable.firstGem.x == swappable.secondGem.x) {
+            // Compare Column indices for correct offset 
+            offset *= (swappable.firstGem.y > swappable.secondGem.y) ? -1 : 1;
+            if ((onePos.x+offset < swappable.secondEndPos.x 
+               && onePos.x+offset > swappable.firstEndPos.x)
+               || (onePos.x+offset > swappable.secondEndPos.x
+               && onePos.x+offset < swappable.firstEndPos.x)) {
+                one->setPosition(Vector2f(onePos.x+offset, onePos.y));
+                two->setPosition(Vector2f(twoPos.x-offset, twoPos.y));
+                
+            }else { 
+                this->finalizeSwap(swappable);
             }
         } else {    // Swap vertically
-            if (swapable.firstGem.x < swapable.secondGem.x ) {
-                if (onePos.y+offset < swapable.firstEndPos.y) {
-                    one->setPosition(Vector2f(onePos.x, onePos.y+offset));
-                    two->setPosition(Vector2f(twoPos.x, twoPos.y-offset));
-                } else { 
-                    one->setPosition(swapable.firstEndPos);
-                    two->setPosition(swapable.secondEndPos);
-                    one->removeState(GemState::Swapping);
-                    two->removeState(GemState::Swapping);
-                    Gems.at(swapable.firstGem.x)
-                        .at(swapable.firstGem.y)
-                        .swap(Gems.at(swapable.secondGem.x)
-                                  .at(swapable.secondGem.y));
-                    swapable.done = true;
-                }
-            } else {
-                if (onePos.y-offset > swapable.firstEndPos.y) {
-                    one->setPosition(Vector2f(onePos.x, onePos.y-offset));
-                    two->setPosition(Vector2f(twoPos.x, twoPos.y+offset));
-                } else { 
-                    one->setPosition(swapable.firstEndPos);
-                    two->setPosition(swapable.secondEndPos);
-                    one->removeState(GemState::Swapping);
-                    two->removeState(GemState::Swapping);
-                    Gems.at(swapable.firstGem.x)
-                        .at(swapable.firstGem.y)
-                        .swap(Gems.at(swapable.secondGem.x)
-                                  .at(swapable.secondGem.y));
-                    swapable.done = true;
-                }
+            // Compare Row indices for correct offset 
+            offset *= (swappable.firstGem.x > swappable.secondGem.x) ? -1 : 1;
+            if ((onePos.y+offset < swappable.secondEndPos.y
+               && onePos.y+offset > swappable.firstEndPos.y)
+               || (onePos.y+offset > swappable.secondEndPos.y
+               && onePos.y+offset < swappable.firstEndPos.y)) {
+                one->setPosition(Vector2f(onePos.x, onePos.y+offset));
+                two->setPosition(Vector2f(twoPos.x, twoPos.y-offset));
+                
+            } else { 
+                this->finalizeSwap(swappable);
             }
+
         }
     }
 
-    while (!SwappingGems.empty() && SwappingGems.front().done)
-        SwappingGems.pop_front();
+    while (!SwappingGemsList.empty() && SwappingGemsList.front().done)
+        SwappingGemsList.pop_front();
 
-    if (SwappingGems.empty())
+    if (SwappingGemsList.empty())
         GameState ^= State::GemSwap;
     GameClock->restart();
 }
