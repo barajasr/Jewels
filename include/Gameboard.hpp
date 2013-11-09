@@ -20,7 +20,9 @@ class Gem;
 
 typedef std::pair<int, int> IntPair;
 typedef std::vector<std::vector<std::unique_ptr<Gem>>> gemVectors;
-typedef std::vector<std::unique_ptr<sf::Texture>>     textureVector;
+typedef std::vector<std::unique_ptr<sf::Texture>>      textureVector;
+typedef std::vector<std::unique_ptr<sf::Texture>>      textureVector;
+typedef std::pair<bool, std::vector<sf::Vector2i>>     solutionPair;
 
 class Gameboard {
 private:
@@ -39,8 +41,9 @@ private:
         sf::Vector2f firstEndPos{0.0f, 0.0f};
         sf::Vector2f secondEndPos{0.0f, 0.0f};
         bool         done{false};
+        bool         toReset{false};
         SwappingGems(const sf::Vector2i firstIndices, const sf::Vector2i secondIndices, const sf::Vector2f firstEnd, const sf::Vector2f secondEnd)
-            : firstGem{firstIndices}, secondGem{secondIndices}, firstEndPos{firstEnd}, secondEndPos{secondEnd}, done{false} {}
+            : firstGem{firstIndices}, secondGem{secondIndices}, firstEndPos{firstEnd}, secondEndPos{secondEnd}, done{false}, toReset{false} {}
 
     } SwappingGems;
 
@@ -68,18 +71,25 @@ private:
     gemVectors                        Gems;
     std::deque<SwappingGems>          SwappingGemsList;
 
+    std::vector<sf::Vector2i> allMatches(const sf::Vector2i indices);
     bool areNeighbors(const sf::Vector2i first, const sf::Vector2i second) const;
+    void downMatches(sf::Vector2i indices, std::vector<sf::Vector2i>& acc);
     void drawBoard();
     void finalizeSwap(SwappingGems& gems);
     int generateGem(const IntPair pos, const IntPair leftGems) const;
+    Gem* getGemPointer(const sf::Vector2i indices) const;
     sf::Vector2f getGemPosition(const sf::Vector2i indices) const;
     sf::Vector2i getMatrixIndices(const sf::Vector2i pixels) const;
     bool isGemSelected(const sf::Vector2i pos);
     void initBoard();
     bool initialDrop();
+    void leftMatches(sf::Vector2i indices, std::vector<sf::Vector2i>& acc);
     bool loadTextures();
     void processClick();
+    void rightMatches(sf::Vector2i indices, std::vector<sf::Vector2i>& acc);
     void swapAnimation();
+    void upMatches(sf::Vector2i indices, std::vector<sf::Vector2i>& acc);
+    solutionPair validSwap(); 
     void update();
 public:
     Gameboard();
