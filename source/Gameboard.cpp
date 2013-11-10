@@ -24,6 +24,8 @@ Gameboard::Gameboard() : GameState(State::InitialGems) {
 
     TileMap = unique_ptr<Sprite>(new Sprite(*Textures.back().get()));
     Selection = unique_ptr<Sprite>(new Sprite(*Textures.at(Textures.size()-2).get()));
+    // Match gems' origin, for simplicity
+    Selection->setOrigin(Vector2f(Gem::getSize()/2, Gem::getSize()/2));
     SelectedGem = Vector2i{-1, -1};
     this->initBoard();
     GameClock = std::unique_ptr<Clock>(new Clock());
@@ -173,7 +175,8 @@ void Gameboard::initBoard() {
             tmp->setTexture(Textures.at(current).get());
             tmp->setGemColor(static_cast<GemColor>(current));
             // Place off board for drop sequence
-            tmp->setPosition(Vector2f(size*col, -static_cast<int>(size*2)));
+            // Take into account sprite origin (20, 20)
+            tmp->setPosition(Vector2f(size*col +size/2, -static_cast<int>(size*2)));
             sprites.emplace_back(move(tmp));
             second = first;
             first = current;
@@ -188,14 +191,16 @@ bool Gameboard::initialDrop() {
                                   false, true};
 
     Time elapsed = GameClock->getElapsedTime();
-    float dropStep{400.0f}; 
+    const float dropStep{400.0f}; 
     auto offset = dropStep*elapsed.asSeconds();
+    const int size(Gem::getSize());
     for (int row{static_cast<int>(Rows)-1}; row >= 0; --row) {
         if (startDrop.at(row)){
             Vector2f pos = Gems.at(row).at(0)->getPosition();
             // Adjust if offset went too far
-            if (pos.y + offset >= Gem::getSize()*row) {
-                offset = Gem::getSize()*row - pos.y;
+            // Take into account sprite origin (20, 20)
+            if (pos.y + offset >= size*row + size/2) {
+                offset = size*row + size/2 - pos.y;
                 startDrop.at(row) = false;
             }
             for (size_t col{0}; col < Columns; ++col) {
@@ -205,14 +210,14 @@ bool Gameboard::initialDrop() {
             }
 
             // When to start dropping row above
-            if (row > 0 && pos.y < Gem::getSize() && pos.y >= Gem::getSize()/2) {
+            if (row > 0 && pos.y < size && pos.y >= size/2) {
                 startDrop.at(row-1) = true;
             } 
         }
     }
 
     GameClock->restart();
-    return Gems.at(0).at(0)->getPosition().y >= 0;
+    return Gems.at(0).at(0)->getPosition().y >= size/2;
 
 }
 
@@ -331,9 +336,10 @@ void Gameboard::swapAnimation() {
     while (!SwappingGemsList.empty() && SwappingGemsList.front().done){
         auto justSwapped = SwappingGemsList.front();
         if (!justSwapped.toReset) {
-            auto result = this->validSwap();
+            auto result = this->isValidSwap();
             if (result.first) {
                 // Valid move completed
+                // Set DisappearingGems state with appropiate gems
             } else {
                 // Reverse the swap just completed
                 justSwapped.done = false;
@@ -363,7 +369,7 @@ void Gameboard::upMatches(Vector2i indices, vector<sf::Vector2i>& acc) {
     }
 }
 
-solutionPair Gameboard::validSwap() {
+solutionPair Gameboard::isValidSwap() {
     const auto gems = SwappingGemsList.front();
     solutionPair result;
     vector<Vector2i> oneMatches = move(this->allMatches(gems.firstGem));

@@ -50,6 +50,7 @@ public:
     void removeState(const GemState toRemove);
     void setGemColor(const GemColor color);
     void setPosition(const sf::Vector2f& pos);
+    void setScale(const sf::Vector2f& factors);
     void setTexture(const sf::Texture* texture);
     void update();
 };

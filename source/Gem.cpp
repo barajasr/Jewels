@@ -12,6 +12,7 @@ using namespace sf;
 Gem::Gem() {
     try {
         GemSprite = unique_ptr<Sprite>(new Sprite());
+        GemSprite->setOrigin(Vector2f(this->Size/2, this->Size/2));
     } catch (const std::bad_alloc& except) {
         cerr << "Failed allocation of Gem.GemSprite: " << except.what() << "\n";
         GemSprite = nullptr;
@@ -62,14 +63,18 @@ const Texture* Gem::getTexture() const {
 void Gem::removeState(const GemState state) {
     this->State ^= state;
 }
-void Gem::setPosition(const Vector2f& pos) {
-    GemSprite->setPosition(pos);
-}
 
 void Gem::setGemColor(const GemColor color) {
     this->Color = color;
 }
 
+void Gem::setPosition(const Vector2f& pos) {
+    GemSprite->setPosition(pos);
+}
+
+void Gem::setScale(const Vector2f& factors) {
+   GemSprite->setScale(factors);
+}
 
 void Gem::setTexture(const Texture* texture) {
     GemSprite->setTexture(*texture);

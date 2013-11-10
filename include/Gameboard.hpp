@@ -89,7 +89,7 @@ private:
     void rightMatches(sf::Vector2i indices, std::vector<sf::Vector2i>& acc);
     void swapAnimation();
     void upMatches(sf::Vector2i indices, std::vector<sf::Vector2i>& acc);
-    solutionPair validSwap(); 
+    solutionPair isValidSwap(); 
     void update();
 public:
     Gameboard();
