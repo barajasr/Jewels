@@ -100,7 +100,7 @@ float Gameboard::disappearingAnimation(float time) {
 void Gameboard::downMatches(Vector2i indices, indicesVector& acc) {
     const auto color = this->getGemPointer(indices)->getGemColor();
     for (++indices.x; indices.x < static_cast<int>(this->Rows); ++indices.x) {
-        if (this->getGemPointer(indices)->getGemColor() != color)
+        if (!this->isMatch(indices, color))
             break;
         acc.emplace_back(indices);
     }
@@ -260,10 +260,43 @@ bool Gameboard::initialDrop() {
 
 }
 
+bool Gameboard::isMatch(const sf::Vector2i indices, const char color) {
+    auto gem = this->getGemPointer(indices);
+    auto gemState = gem->getState();
+    if ((gemState & GemState::Swapping) == GemState::Swapping
+        || (gemState & GemState::Disappearing) == GemState::Disappearing
+        || (gemState & GemState::Falling) == GemState::Falling
+        || gem->getGemColor() != color)
+            return false;
+    return true;
+}
+
+solutionPair Gameboard::isValidSwap() {
+    const auto gems = SwappingGemsList.front();
+    solutionPair result;
+    vector<Vector2i> oneMatches = move(this->allMatches(gems.firstGem));
+    vector<Vector2i> twoMatches = move(this->allMatches(gems.secondGem));
+
+    const size_t goal{3};
+    if (oneMatches.size() >= goal) {
+        result.first = true;
+        result.second.insert(result.second.end(),
+                             oneMatches.begin(),
+                             oneMatches.end());
+    }
+    if (twoMatches.size() >= goal) {
+        result.first = true;
+        result.second.insert(result.second.end(),
+                             twoMatches.begin(),
+                             twoMatches.end());
+    }
+    return result;
+}
+
 void Gameboard::leftMatches(Vector2i indices, indicesVector& acc) {
     const auto color = this->getGemPointer(indices)->getGemColor();
     for (--indices.y; indices.y >= 0; --indices.y) {
-        if (this->getGemPointer(indices)->getGemColor() != color)
+        if (!this->isMatch(indices, color))
             break;
         acc.emplace_back(indices);
     }
@@ -358,7 +391,7 @@ void Gameboard::removeSwappedGems() {
 void Gameboard::rightMatches(Vector2i indices, indicesVector& acc) {
     const auto color = this->getGemPointer(indices)->getGemColor();
     for (++indices.y; indices.y < static_cast<int>(this->Columns); ++indices.y) {
-        if (this->getGemPointer(indices)->getGemColor() != color)
+        if (!this->isMatch(indices, color))
             break;
         acc.emplace_back(indices);
     }
@@ -418,32 +451,10 @@ float Gameboard::swapAnimation() {
 void Gameboard::upMatches(Vector2i indices, indicesVector& acc) {
     const auto color = this->getGemPointer(indices)->getGemColor();
     for (--indices.x; indices.x >= 0; --indices.x) {
-        if (this->getGemPointer(indices)->getGemColor() != color)
+        if (!this->isMatch(indices, color))
             break;
         acc.emplace_back(indices);
     }
-}
-
-solutionPair Gameboard::isValidSwap() {
-    const auto gems = SwappingGemsList.front();
-    solutionPair result;
-    vector<Vector2i> oneMatches = move(this->allMatches(gems.firstGem));
-    vector<Vector2i> twoMatches = move(this->allMatches(gems.secondGem));
-
-    const size_t goal{3};
-    if (oneMatches.size() >= goal) {
-        result.first = true;
-        result.second.insert(result.second.end(),
-                             oneMatches.begin(),
-                             oneMatches.end());
-    }
-    if (twoMatches.size() >= goal) {
-        result.first = true;
-        result.second.insert(result.second.end(),
-                             twoMatches.begin(),
-                             twoMatches.end());
-    }
-    return result;
 }
 
 void Gameboard::update() {

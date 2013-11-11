@@ -92,6 +92,7 @@ private:
     void initBoard();
     bool initialDrop();
     bool isGemSelected(const sf::Vector2i pos);
+    bool isMatch(const sf::Vector2i indices, const char state);
     solutionPair isValidSwap(); 
     void leftMatches(sf::Vector2i indices, indicesVector& acc);
     bool loadTextures();
