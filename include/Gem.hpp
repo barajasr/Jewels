@@ -22,11 +22,12 @@ enum GemColor {
 };
 
 enum GemState {
-    Normal   = (1 << 0),
-    Fire     = (1 << 1),
-    Star     = (1 << 2),
-    Falling  = (1 << 3),
-    Swapping = (1 << 4)
+    Normal       = (1 << 0),
+    Fire         = (1 << 1),
+    Star         = (1 << 2),
+    Swapping     = (1 << 3),
+    Disappearing = (1 << 4),
+    Falling      = (1 << 5)
 };
 
 class Gem {

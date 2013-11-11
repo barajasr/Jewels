@@ -60,6 +60,40 @@ bool Gameboard::areNeighbors(const Vector2i first, const Vector2i second) const 
 
 float Gameboard::disappearingAnimation(float time) {
     // Scale down all gems in disappearing list
+    float scale = 0.85f;
+    bool resetClock = false;
+    // Check if no swapAnimation time was used
+    if (time < 0.0f) {
+        time = GameClock->getElapsedTime().asSeconds();
+        scale -= time;
+        resetClock = true;
+    }
+
+    for (auto& indicesList : DisappearingGemsList) {
+        for (auto& indices : indicesList.indices) {
+            auto gem = this->getGemPointer(indices);
+            if (gem->getScale().x <= 0.01f) {
+                indicesList.done = true;
+                break;
+            }
+            gem->scale({scale, scale});
+        }
+    }
+
+    while (DisappearingGemsList.front().done) {
+        // TODO
+        // Add indices and those above them to FallingSet
+        DisappearingGemsList.pop_front();
+        GameState |= State::FallingGems;
+    }
+    if (DisappearingGemsList.empty()) {
+        GameState ^= State::DisappearingGems;
+    }
+
+    // Accumlated delay for other updates to use
+    time += GameClock->getElapsedTime().asSeconds();
+    if(resetClock)
+        GameClock->restart();
     return time;
 }
 
@@ -254,7 +288,9 @@ void Gameboard::processClick() {
     if(this->isGemSelected(mousePosition)) {
         auto indices = this->getMatrixIndices(mousePosition);
         char state = Gems.at(indices.x).at(indices.y)->getState();
-        if ((state & GemState::Swapping) == GemState::Swapping)
+        if ((state & GemState::Disappearing) == GemState::Disappearing
+           || (state & GemState::Falling) == GemState::Falling
+           || (state & GemState::Swapping) == GemState::Swapping)
             return;
 
         auto newSelectionPosition = this->getGemPosition(indices);
@@ -298,9 +334,11 @@ void Gameboard::removeSwappedGems() {
             auto result = this->isValidSwap();
             if (result.first) {
                 // Valid move completed
-                // Set DisappearingGems state with appropiate gems
+                // Set appropiate states
                 this->GameState |= State::DisappearingGems;
-                // Append gems to disappearing list
+                for (auto& indices : result.second)
+                    this->getGemPointer(indices)->addState(GemState::Disappearing);
+                DisappearingGemsList.emplace_back(result.second);
             } else {
                 // Reverse the swap just completed
                 justSwapped.done = false;

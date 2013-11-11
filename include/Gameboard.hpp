@@ -36,6 +36,12 @@ private:
         FallingGems      = (1 << 5)
     };
 
+    typedef struct DisappearingList {
+        bool          done{false};
+        indicesVector indices;
+        DisappearingList(indicesVector& list) : indices{std::move(list)} {}
+    } DisappearingList;
+
     typedef struct SwappingGems {
         sf::Vector2i firstGem{-1, -1};
         sf::Vector2i secondGem{-1, -1};
@@ -71,6 +77,7 @@ private:
     textureVector                     Textures;
     gemVectors                        Gems;
     std::deque<SwappingGems>          SwappingGemsList;
+    std::deque<DisappearingList>      DisappearingGemsList;
 
     std::vector<sf::Vector2i> allMatches(const sf::Vector2i indices);
     bool areNeighbors(const sf::Vector2i first, const sf::Vector2i second) const;
@@ -82,9 +89,10 @@ private:
     Gem* getGemPointer(const sf::Vector2i indices) const;
     sf::Vector2f getGemPosition(const sf::Vector2i indices) const;
     sf::Vector2i getMatrixIndices(const sf::Vector2i pixels) const;
-    bool isGemSelected(const sf::Vector2i pos);
     void initBoard();
     bool initialDrop();
+    bool isGemSelected(const sf::Vector2i pos);
+    solutionPair isValidSwap(); 
     void leftMatches(sf::Vector2i indices, indicesVector& acc);
     bool loadTextures();
     void processClick();
@@ -92,7 +100,6 @@ private:
     void rightMatches(sf::Vector2i indices, indicesVector& acc);
     float swapAnimation();
     void upMatches(sf::Vector2i indices, indicesVector& acc);
-    solutionPair isValidSwap(); 
     void update();
 public:
     Gameboard();
