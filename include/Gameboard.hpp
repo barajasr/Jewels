@@ -20,6 +20,7 @@ class Gem;
 
 typedef std::pair<int, int> IntPair;
 typedef std::vector<std::vector<std::unique_ptr<Gem>>> gemVectors;
+typedef std::vector<sf::Vector2i>                      indicesVector;
 typedef std::vector<std::unique_ptr<sf::Texture>>      textureVector;
 typedef std::vector<std::unique_ptr<sf::Texture>>      textureVector;
 typedef std::pair<bool, std::vector<sf::Vector2i>>     solutionPair;
@@ -73,7 +74,7 @@ private:
 
     std::vector<sf::Vector2i> allMatches(const sf::Vector2i indices);
     bool areNeighbors(const sf::Vector2i first, const sf::Vector2i second) const;
-    void downMatches(sf::Vector2i indices, std::vector<sf::Vector2i>& acc);
+    void downMatches(sf::Vector2i indices, indicesVector& acc);
     void drawBoard();
     void finalizeSwap(SwappingGems& gems);
     int generateGem(const IntPair pos, const IntPair leftGems) const;
@@ -83,12 +84,12 @@ private:
     bool isGemSelected(const sf::Vector2i pos);
     void initBoard();
     bool initialDrop();
-    void leftMatches(sf::Vector2i indices, std::vector<sf::Vector2i>& acc);
+    void leftMatches(sf::Vector2i indices, indicesVector& acc);
     bool loadTextures();
     void processClick();
-    void rightMatches(sf::Vector2i indices, std::vector<sf::Vector2i>& acc);
+    void rightMatches(sf::Vector2i indices, indicesVector& acc);
     void swapAnimation();
-    void upMatches(sf::Vector2i indices, std::vector<sf::Vector2i>& acc);
+    void upMatches(sf::Vector2i indices, indicesVector& acc);
     solutionPair isValidSwap(); 
     void update();
 public:

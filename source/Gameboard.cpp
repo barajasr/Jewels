@@ -34,9 +34,9 @@ Gameboard::Gameboard() : GameState(State::InitialGems) {
 Gameboard::~Gameboard() = default;
 
 vector<Vector2i> Gameboard::allMatches(const Vector2i indices) {
-    vector<Vector2i> result{indices};
-    vector<Vector2i> vertical;
-    vector<Vector2i> horizontal;
+    indicesVector result{indices};
+    indicesVector vertical;
+    indicesVector horizontal;
     this->upMatches(indices, vertical);
     this->downMatches(indices, vertical);
     this->leftMatches(indices, horizontal);
@@ -58,7 +58,7 @@ bool Gameboard::areNeighbors(const Vector2i first, const Vector2i second) const 
            || (first.x == second.x && first.y-1 == second.y);
 }
 
-void Gameboard::downMatches(Vector2i indices, vector<sf::Vector2i>& acc) {
+void Gameboard::downMatches(Vector2i indices, indicesVector& acc) {
     const auto color = this->getGemPointer(indices)->getGemColor();
     for (++indices.x; indices.x < static_cast<int>(this->Rows); ++indices.x) {
         if (this->getGemPointer(indices)->getGemColor() != color)
@@ -221,7 +221,7 @@ bool Gameboard::initialDrop() {
 
 }
 
-void Gameboard::leftMatches(Vector2i indices, vector<sf::Vector2i>& acc) {
+void Gameboard::leftMatches(Vector2i indices, indicesVector& acc) {
     const auto color = this->getGemPointer(indices)->getGemColor();
     for (--indices.y; indices.y >= 0; --indices.y) {
         if (this->getGemPointer(indices)->getGemColor() != color)
@@ -284,7 +284,7 @@ void Gameboard::processClick() {
     }
 }
 
-void Gameboard::rightMatches(Vector2i indices, vector<sf::Vector2i>& acc) {
+void Gameboard::rightMatches(Vector2i indices, indicesVector& acc) {
     const auto color = this->getGemPointer(indices)->getGemColor();
     for (++indices.y; indices.y < static_cast<int>(this->Columns); ++indices.y) {
         if (this->getGemPointer(indices)->getGemColor() != color)
@@ -360,7 +360,7 @@ void Gameboard::swapAnimation() {
     GameClock->restart();
 }
 
-void Gameboard::upMatches(Vector2i indices, vector<sf::Vector2i>& acc) {
+void Gameboard::upMatches(Vector2i indices, indicesVector& acc) {
     const auto color = this->getGemPointer(indices)->getGemColor();
     for (--indices.x; indices.x >= 0; --indices.x) {
         if (this->getGemPointer(indices)->getGemColor() != color)
