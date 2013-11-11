@@ -58,6 +58,11 @@ bool Gameboard::areNeighbors(const Vector2i first, const Vector2i second) const 
            || (first.x == second.x && first.y-1 == second.y);
 }
 
+float Gameboard::disappearingAnimation(float time) {
+    // Scale down all gems in disappearing list
+    return time;
+}
+
 void Gameboard::downMatches(Vector2i indices, indicesVector& acc) {
     const auto color = this->getGemPointer(indices)->getGemColor();
     for (++indices.x; indices.x < static_cast<int>(this->Rows); ++indices.x) {
@@ -294,6 +299,8 @@ void Gameboard::removeSwappedGems() {
             if (result.first) {
                 // Valid move completed
                 // Set DisappearingGems state with appropiate gems
+                this->GameState |= State::DisappearingGems;
+                // Append gems to disappearing list
             } else {
                 // Reverse the swap just completed
                 justSwapped.done = false;
@@ -308,9 +315,6 @@ void Gameboard::removeSwappedGems() {
         }
         SwappingGemsList.pop_front();
     }
-
-    if (SwappingGemsList.empty())
-        GameState ^= State::GemSwap;
 }
 
 void Gameboard::rightMatches(Vector2i indices, indicesVector& acc) {
@@ -322,7 +326,9 @@ void Gameboard::rightMatches(Vector2i indices, indicesVector& acc) {
     }
 }
 
-void Gameboard::swapAnimation() {
+// Update gems that were schedule to be swapped.
+// Returns time taken to update for other update/animation functions.
+float Gameboard::swapAnimation() {
     const auto elapsed = GameClock->getElapsedTime();
     const float step = 250.0f;
     float offset = step * elapsed.asSeconds();
@@ -363,7 +369,12 @@ void Gameboard::swapAnimation() {
     }
 
     this->removeSwappedGems();
+    if (SwappingGemsList.empty())
+        GameState ^= State::GemSwap;
+
+    const auto processTime = GameClock->getElapsedTime().asSeconds();
     GameClock->restart();
+    return elapsed.asSeconds() + processTime;
 }
 
 void Gameboard::upMatches(Vector2i indices, indicesVector& acc) {
@@ -403,6 +414,10 @@ void Gameboard::update() {
             GameState = State::Idle;
     }
 
+    float timePassed{-1.0f};
     if ((GameState & State::GemSwap) == State::GemSwap)
-        this->swapAnimation();
+        timePassed = this->swapAnimation();
+
+    if ((GameState & State::DisappearingGems) == State::DisappearingGems)
+        timePassed += this->disappearingAnimation(timePassed);
 }

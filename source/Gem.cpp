@@ -48,6 +48,10 @@ Vector2f Gem::getPosition() const {
     return GemSprite->getPosition();
 }
 
+Vector2f Gem::getScale() const {
+    return GemSprite->getScale();
+}
+
 size_t Gem::getSize() {
     return Size;
 }
@@ -64,6 +68,9 @@ void Gem::removeState(const GemState state) {
     this->State ^= state;
 }
 
+void Gem::scale(const Vector2f& factors) {
+   GemSprite->scale(factors);
+}
 void Gem::setGemColor(const GemColor color) {
     this->Color = color;
 }
@@ -72,12 +79,10 @@ void Gem::setPosition(const Vector2f& pos) {
     GemSprite->setPosition(pos);
 }
 
-void Gem::setScale(const Vector2f& factors) {
-   GemSprite->setScale(factors);
+void Gem::setScale(const Vector2f& scale) {
+    GemSprite->setScale(scale);
 }
 
 void Gem::setTexture(const Texture* texture) {
     GemSprite->setTexture(*texture);
 }
-
-void Gem::update() {}

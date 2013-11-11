@@ -75,6 +75,7 @@ private:
     std::vector<sf::Vector2i> allMatches(const sf::Vector2i indices);
     bool areNeighbors(const sf::Vector2i first, const sf::Vector2i second) const;
     void downMatches(sf::Vector2i indices, indicesVector& acc);
+    float disappearingAnimation(float time);
     void drawBoard();
     void finalizeSwap(SwappingGems& gems);
     int generateGem(const IntPair pos, const IntPair leftGems) const;
@@ -89,7 +90,7 @@ private:
     void processClick();
     void removeSwappedGems();
     void rightMatches(sf::Vector2i indices, indicesVector& acc);
-    void swapAnimation();
+    float swapAnimation();
     void upMatches(sf::Vector2i indices, indicesVector& acc);
     solutionPair isValidSwap(); 
     void update();

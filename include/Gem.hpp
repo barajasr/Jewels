@@ -44,15 +44,16 @@ public:
     void draw(sf::RenderWindow* window);
     GemColor getGemColor() const;
     sf::Vector2f getPosition() const;
+    sf::Vector2f getScale() const;
     static size_t getSize();
     char getState() const;
     const sf::Texture* getTexture() const;
     void removeState(const GemState toRemove);
+    void scale(const sf::Vector2f& factors);
     void setGemColor(const GemColor color);
     void setPosition(const sf::Vector2f& pos);
-    void setScale(const sf::Vector2f& factors);
+    void setScale(const sf::Vector2f& scale);
     void setTexture(const sf::Texture* texture);
-    void update();
 };
 
 #endif
