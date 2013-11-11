@@ -87,6 +87,7 @@ private:
     void leftMatches(sf::Vector2i indices, indicesVector& acc);
     bool loadTextures();
     void processClick();
+    void removeSwappedGems();
     void rightMatches(sf::Vector2i indices, indicesVector& acc);
     void swapAnimation();
     void upMatches(sf::Vector2i indices, indicesVector& acc);

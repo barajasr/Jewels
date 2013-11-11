@@ -284,6 +284,35 @@ void Gameboard::processClick() {
     }
 }
 
+// Pops gems that have been swapped.
+// If none left to pop, remove GemSwap state.
+void Gameboard::removeSwappedGems() {
+    while (!SwappingGemsList.empty() && SwappingGemsList.front().done){
+        auto justSwapped = SwappingGemsList.front();
+        if (!justSwapped.toReset) {
+            auto result = this->isValidSwap();
+            if (result.first) {
+                // Valid move completed
+                // Set DisappearingGems state with appropiate gems
+            } else {
+                // Reverse the swap just completed
+                justSwapped.done = false;
+                justSwapped.toReset = true;
+                SwappingGemsList.emplace_back(justSwapped);
+                // Reset state 
+                this->getGemPointer(justSwapped.firstGem)
+                    ->addState(GemState::Swapping);
+                this->getGemPointer(justSwapped.secondGem)
+                    ->addState(GemState::Swapping);
+            }
+        }
+        SwappingGemsList.pop_front();
+    }
+
+    if (SwappingGemsList.empty())
+        GameState ^= State::GemSwap;
+}
+
 void Gameboard::rightMatches(Vector2i indices, indicesVector& acc) {
     const auto color = this->getGemPointer(indices)->getGemColor();
     for (++indices.y; indices.y < static_cast<int>(this->Columns); ++indices.y) {
@@ -333,30 +362,7 @@ void Gameboard::swapAnimation() {
         }
     }
 
-    while (!SwappingGemsList.empty() && SwappingGemsList.front().done){
-        auto justSwapped = SwappingGemsList.front();
-        if (!justSwapped.toReset) {
-            auto result = this->isValidSwap();
-            if (result.first) {
-                // Valid move completed
-                // Set DisappearingGems state with appropiate gems
-            } else {
-                // Reverse the swap just completed
-                justSwapped.done = false;
-                justSwapped.toReset = true;
-                SwappingGemsList.emplace_back(justSwapped);
-                // Reset state 
-                this->getGemPointer(justSwapped.firstGem)
-                    ->addState(GemState::Swapping);
-                this->getGemPointer(justSwapped.secondGem)
-                    ->addState(GemState::Swapping);
-            }
-        }
-        SwappingGemsList.pop_front();
-    }
-
-    if (SwappingGemsList.empty())
-        GameState ^= State::GemSwap;
+    this->removeSwappedGems();
     GameClock->restart();
 }
 
