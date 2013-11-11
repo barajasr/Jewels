@@ -21,9 +21,8 @@ class Gem;
 typedef std::pair<int, int> IntPair;
 typedef std::vector<std::vector<std::unique_ptr<Gem>>> gemVectors;
 typedef std::vector<sf::Vector2i>                      indicesVector;
-typedef std::vector<std::unique_ptr<sf::Texture>>      textureVector;
-typedef std::vector<std::unique_ptr<sf::Texture>>      textureVector;
 typedef std::pair<bool, std::vector<sf::Vector2i>>     solutionPair;
+typedef std::vector<std::unique_ptr<sf::Texture>>      textureVector;
 
 class Gameboard {
 private:

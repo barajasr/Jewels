@@ -263,12 +263,10 @@ bool Gameboard::initialDrop() {
 bool Gameboard::isMatch(const sf::Vector2i indices, const char color) {
     auto gem = this->getGemPointer(indices);
     auto gemState = gem->getState();
-    if ((gemState & GemState::Swapping) == GemState::Swapping
+    return !((gemState & GemState::Swapping) == GemState::Swapping
         || (gemState & GemState::Disappearing) == GemState::Disappearing
         || (gemState & GemState::Falling) == GemState::Falling
-        || gem->getGemColor() != color)
-            return false;
-    return true;
+        || gem->getGemColor() != color);
 }
 
 solutionPair Gameboard::isValidSwap() {
