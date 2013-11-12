@@ -26,6 +26,8 @@ Gem::Gem(const Texture* texture, const GemColor color, const GemState state) : G
         GemSprite->setTexture(*texture);
 }
 
+Gem::~Gem() = default;
+
 void Gem::addState(const GemState state) {
     if ((this->State & GemState::Normal) == GemState::Normal
        && (state == Fire || state == Star))
@@ -34,7 +36,6 @@ void Gem::addState(const GemState state) {
     this->State |= state;
 }
 
-Gem::~Gem() = default;
 
 void Gem::draw(RenderWindow* window) {
     if (window)

@@ -9,14 +9,18 @@ APP=Jewels
 
 all: $(APP)
 
-$(APP): $(ODIR)/Gem.o $(ODIR)/Gameboard.o $(ODIR)/Main.o
+$(APP): $(ODIR)/Cascade.o $(ODIR)/Gem.o $(ODIR)/Gameboard.o $(ODIR)/Main.o
 	$(CC) -o $(APP) $(ODIR)/*.o $(LIBS) $(LSFML)
 
 $(ODIR)/Main.o: $(SDIR)/Main.cpp $(IDIR)/Gameboard.hpp
 	$(CC) $(CFLAGS) -c $(SDIR)/Main.cpp
 	mv Main.o $(ODIR)
 
-$(ODIR)/Gameboard.o: $(SDIR)/Gameboard.cpp $(IDIR)/Gameboard.hpp $(SDIR)/Gem.cpp
+$(ODIR)/Cascade.o: $(SDIR)/Cascade.cpp $(IDIR)/Cascade.hpp $(SDIR)/Gameboard.cpp $(SDIR)/Gem.cpp
+	$(CC) $(CFLAGS) -c $(SDIR)/Cascade.cpp
+	mv Cascade.o $(ODIR)
+
+$(ODIR)/Gameboard.o: $(SDIR)/Gameboard.cpp $(IDIR)/Gameboard.hpp $(IDIR)/Gem.hpp $(IDIR)/Cascade.hpp
 	$(CC) $(CFLAGS) -c $(SDIR)/Gameboard.cpp
 	mv Gameboard.o $(ODIR)
 

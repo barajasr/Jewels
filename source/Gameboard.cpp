@@ -7,11 +7,22 @@
 #include <SFML/Window/Event.hpp>
 #include <SFML/System/Clock.hpp>
 
+#include "../include/Cascade.hpp"
 #include "../include/Gameboard.hpp"
 #include "../include/Gem.hpp"
 
 using namespace std;
 using namespace sf;
+
+bool sortVector2i(const Vector2i one, const Vector2i two) {
+    // Sort by col then row
+    if (one.y < two.y)
+        return true;
+    else if (one.y > two.y)
+        return false;
+    else
+        return one.x < two.x;
+}
 
 Gameboard::Gameboard() : GameState(State::InitialGems) {
     Window = unique_ptr<RenderWindow>(new RenderWindow(VideoMode(Height, Width),
@@ -28,7 +39,8 @@ Gameboard::Gameboard() : GameState(State::InitialGems) {
     Selection->setOrigin(Vector2f(Gem::getSize()/2, Gem::getSize()/2));
     SelectedGem = Vector2i{-1, -1};
     this->initBoard();
-    GameClock = std::unique_ptr<Clock>(new Clock());
+    GameClock = unique_ptr<Clock>(new Clock());
+    CascadingGems = unique_ptr<Cascade>(new Cascade());
 }
 
 Gameboard::~Gameboard() = default;
@@ -83,6 +95,13 @@ float Gameboard::disappearingAnimation(float time) {
     while (DisappearingGemsList.front().done) {
         // TODO
         // Add indices and those above them to FallingSet
+        auto list = move(DisappearingGemsList.front().indices);
+        sort(list.begin(), list.end(), sortVector2i);
+        for (auto indices : list) {
+            cerr << "(" << indices.x << "," << indices.y << ") " ;
+        }
+        CascadingGems->addOpenings(this, list);
+        cerr << list.size() <<  endl;
         DisappearingGemsList.pop_front();
         GameState |= State::FallingGems;
     }
@@ -108,8 +127,10 @@ void Gameboard::downMatches(Vector2i indices, indicesVector& acc) {
 
 void Gameboard::drawBoard() {
     for (auto& row : Gems)
-        for (auto& gem : row)
-            gem->draw(Window.get());
+        for (auto& gem : row) {
+            if (gem->getGemColor() != GemColor::None)
+                gem->draw(Window.get());
+        }
 
     if ((GameState & State::GemSelected) == State::GemSelected)
         Window->draw(*Selection.get());
@@ -122,8 +143,7 @@ void Gameboard::finalizeSwap(SwappingGems& gems) {
     two->setPosition(gems.secondEndPos);
     one->removeState(GemState::Swapping);
     two->removeState(GemState::Swapping);
-    Gems.at(gems.firstGem.x).at(gems.firstGem.y)
-        .swap(Gems.at(gems.secondGem.x).at(gems.secondGem.y));
+    this->swapGemPointers(gems.firstGem, gems.secondGem);
     gems.done = true;
 }
 
@@ -446,6 +466,10 @@ float Gameboard::swapAnimation() {
     return elapsed.asSeconds() + processTime;
 }
 
+void Gameboard::swapGemPointers(const sf::Vector2i one, const sf::Vector2i two) {
+    swap(Gems.at(one.x).at(one.y), Gems.at(two.x).at(two.y));
+}
+
 void Gameboard::upMatches(Vector2i indices, indicesVector& acc) {
     const auto color = this->getGemPointer(indices)->getGemColor();
     for (--indices.x; indices.x >= 0; --indices.x) {
@@ -467,4 +491,7 @@ void Gameboard::update() {
 
     if ((GameState & State::DisappearingGems) == State::DisappearingGems)
         timePassed += this->disappearingAnimation(timePassed);
+
+    if((GameState & State::FallingGems) == State::FallingGems)
+        CascadingGems->update(this);
 }

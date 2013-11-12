@@ -17,6 +17,7 @@ namespace sf {
 }
 
 class Gem;
+class Cascade;
 
 typedef std::pair<int, int> IntPair;
 typedef std::vector<std::vector<std::unique_ptr<Gem>>> gemVectors;
@@ -77,6 +78,7 @@ private:
     gemVectors                        Gems;
     std::deque<SwappingGems>          SwappingGemsList;
     std::deque<DisappearingList>      DisappearingGemsList;
+    std::unique_ptr<Cascade>          CascadingGems;
 
     std::vector<sf::Vector2i> allMatches(const sf::Vector2i indices);
     bool areNeighbors(const sf::Vector2i first, const sf::Vector2i second) const;
@@ -85,7 +87,6 @@ private:
     void drawBoard();
     void finalizeSwap(SwappingGems& gems);
     int generateGem(const IntPair pos, const IntPair leftGems) const;
-    Gem* getGemPointer(const sf::Vector2i indices) const;
     sf::Vector2f getGemPosition(const sf::Vector2i indices) const;
     sf::Vector2i getMatrixIndices(const sf::Vector2i pixels) const;
     void initBoard();
@@ -105,6 +106,8 @@ public:
     Gameboard();
     ~Gameboard();
     void gameLoop();
+    Gem* getGemPointer(const sf::Vector2i indices) const;
+    void swapGemPointers(const sf::Vector2i one, const sf::Vector2i two);
 };
 
 #endif
