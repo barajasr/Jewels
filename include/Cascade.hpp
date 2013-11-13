@@ -14,8 +14,8 @@ namespace sf {
 
 class Gameboard;
 
-typedef std::map<size_t, std::pair<int, bool >>           CascadingColumns;
-typedef std::map<size_t, std::pair<int, bool >>::iterator CascadingIterator;
+typedef std::map<int, std::pair<int, bool >>           CascadingColumns;
+typedef std::map<int, std::pair<int, bool >>::iterator CascadingIterator;
 
 class Cascade {
 private:
@@ -24,7 +24,7 @@ private:
     CascadingColumns           Columns;
     
     void swapUp(Gameboard* board, sf::Vector2i indices);
-    void finalize(Gameboard* board, size_t column);
+    void finalize(Gameboard* board, int column);
 public:
     Cascade();
     ~Cascade();

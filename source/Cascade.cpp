@@ -34,7 +34,7 @@ void Cascade::addOpenings(Gameboard* board, vector<Vector2i>& spots) {
     }
 }
 
-void Cascade::finalize(Gameboard* board, size_t column) {
+void Cascade::finalize(Gameboard* board, int column) {
     const int size = Gem::getSize();
     for (int row{Columns.at(column).first}; row >= 0; --row) {
         auto gem = board->getGemPointer({row, column});
