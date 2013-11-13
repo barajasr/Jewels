@@ -72,7 +72,7 @@ bool Gameboard::areNeighbors(const Vector2i first, const Vector2i second) const 
 
 float Gameboard::disappearingAnimation(float time) {
     // Scale down all gems in disappearing list
-    float scale = 0.85f;
+    float scale = 0.75f;
     bool resetClock = false;
     // Check if no swapAnimation time was used
     if (time < 0.0f) {
@@ -92,16 +92,11 @@ float Gameboard::disappearingAnimation(float time) {
         }
     }
 
+    // Sort by column and add to Cascading set
     while (DisappearingGemsList.front().done) {
-        // TODO
-        // Add indices and those above them to FallingSet
         auto list = move(DisappearingGemsList.front().indices);
         sort(list.begin(), list.end(), sortVector2i);
-        for (auto indices : list) {
-            cerr << "(" << indices.x << "," << indices.y << ") " ;
-        }
         CascadingGems->addOpenings(this, list);
-        cerr << list.size() <<  endl;
         DisappearingGemsList.pop_front();
         GameState |= State::FallingGems;
     }

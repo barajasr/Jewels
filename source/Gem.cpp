@@ -84,6 +84,10 @@ void Gem::setScale(const Vector2f& scale) {
     GemSprite->setScale(scale);
 }
 
+void Gem::setState(const GemState state) {
+    this->State = state;
+}
+
 void Gem::setTexture(const Texture* texture) {
     GemSprite->setTexture(*texture);
 }
