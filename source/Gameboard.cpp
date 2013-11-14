@@ -10,11 +10,13 @@
 #include "../include/Cascade.hpp"
 #include "../include/Gameboard.hpp"
 #include "../include/Gem.hpp"
+#include "../include/Swap.hpp"
+#include "../include/Vanish.hpp"
 
 using namespace std;
 using namespace sf;
 
-Gameboard::Gameboard() : GameState(State::InitialGems) {
+Gameboard::Gameboard() : Generator{Rand()}, Distribution(GemColor::Blue, GemColor::White) {
     Window = unique_ptr<RenderWindow>(new RenderWindow(VideoMode(Height, Width),
                                                        "Jewels",
                                                        sf::Style::Close));
@@ -27,10 +29,13 @@ Gameboard::Gameboard() : GameState(State::InitialGems) {
     Selection = unique_ptr<Sprite>(new Sprite(*Textures.at(Textures.size()-2).get()));
     // Match gems' origin, for simplicity
     Selection->setOrigin(Vector2f(Gem::getSize()/2, Gem::getSize()/2));
-    SelectedGem = Vector2i{-1, -1};
+    SelectionIndices = Vector2i{-1, -1};
+
     this->initBoard();
-    GameClock = unique_ptr<Clock>(new Clock());
+
     CascadingGems = unique_ptr<Cascade>(new Cascade(this, this->Columns));
+    SwapQueue = unique_ptr<Swap>(new Swap(this));
+    VanishQueue = unique_ptr<Vanish>(new Vanish(this));
 }
 
 Gameboard::~Gameboard() = default;
@@ -42,45 +47,6 @@ bool Gameboard::areNeighbors(const Vector2i first, const Vector2i second) const 
            || (first.x == second.x && first.y-1 == second.y);
 }
 
-float Gameboard::disappearingAnimation(float time) {
-    // Scale down all gems in disappearing list
-    float scale = 0.75f;
-    bool resetClock = false;
-    // Check if no swapAnimation time was used
-    if (time < 0.0f) {
-        time = GameClock->getElapsedTime().asSeconds();
-        scale -= time;
-        resetClock = true;
-    }
-
-    for (auto& indicesList : DisappearingGemsList) {
-        for (auto& indices : indicesList.indices) {
-            auto gem = this->getGemPointer(indices);
-            if (gem->getScale().x <= 0.01f) {
-                indicesList.done = true;
-                break;
-            }
-            gem->scale({scale, scale});
-        }
-    }
-
-    // Sort by column and add to Cascading set
-    while (!DisappearingGemsList.empty() && DisappearingGemsList.front().done) {
-        CascadingGems->addOpennings(DisappearingGemsList.front().indices);
-        DisappearingGemsList.pop_front();
-        GameState |= State::FallingGems;
-    }
-    if (DisappearingGemsList.empty()) {
-        GameState ^= State::DisappearingGems;
-    }
-
-    // Accumlated delay for other updates to use
-    time += GameClock->getElapsedTime().asSeconds();
-    if(resetClock)
-        GameClock->restart();
-    return time;
-}
-
 void Gameboard::drawBoard() {
     for (auto& row : Gems)
         for (auto& gem : row) {
@@ -88,13 +54,15 @@ void Gameboard::drawBoard() {
                 gem->draw(Window.get());
         }
 
-    if ((GameState & State::GemSelected) == State::GemSelected)
+    if (SelectionIndices.x > -1)
         Window->draw(*Selection.get());
 }
 
 void Gameboard::gameLoop() {
     if (Error)
         return;
+
+    this->openingDrop();
 
     while (Window->isOpen()) {
         Event event;
@@ -116,11 +84,8 @@ void Gameboard::gameLoop() {
     }
 }
 
-int Gameboard::generateGem(const IntPair pos, const IntPair leftGems) const{
-    random_device rd;
-    mt19937_64 gen(rd());
+int Gameboard::generateGem(const IntPair pos, const IntPair leftGems) {
     // [0, 5]
-    uniform_int_distribution<int> distribution(GemColor::Blue, GemColor::White);
     // Will cause std::out_of_range exception if error
     int current{-1};
     if (pos.second >= 2 && pos.second < static_cast<int>(this->Columns)) {
@@ -131,16 +96,16 @@ int Gameboard::generateGem(const IntPair pos, const IntPair leftGems) const{
             }
 
         if (upGems.first != upGems.second && leftGems.first != leftGems.second) {
-            current = distribution(gen);
+            current = Distribution(Generator);
         } else {
             do {
-                current = distribution(gen);
+                current = Distribution(Generator);
             } while ((leftGems.first == leftGems.second && current == leftGems.first)
                    || (upGems.first == upGems.second && current == upGems.first));
         }
     } else if (pos.second < 2) {
             do {
-                current = distribution(gen);
+                current = Distribution(Generator);
             } while (current == leftGems.first && current == leftGems.second);
     }
     return current;
@@ -171,13 +136,13 @@ bool Gameboard::isGemSelected(const Vector2i pos) {
 }
 
 void Gameboard::initBoard() {
-    const size_t size = Gem::getSize();
-    for (size_t row{0}; row < this->Rows; ++row) {                                     
+    const auto size = Gem::getSize();
+    for (int row{0}; row < this->Rows; ++row) {                                     
         int first{-1};
         int second{-2}; 
         std::vector<unique_ptr<Gem>> sprites;
         // Build row of sprites
-        for (size_t col{0}; col < this->Columns; ++col) {
+        for (int col{0}; col < this->Columns; ++col) {
             int current = generateGem({col, row}, {first, second});
             unique_ptr<Gem> tmp = unique_ptr<Gem>(new Gem());
             tmp->setTexture(Textures.at(current).get());
@@ -193,16 +158,17 @@ void Gameboard::initBoard() {
     }
 }
 
-bool Gameboard::initialDrop() {
+// Takes float of time since last called
+// Returns whether animation is complete
+bool Gameboard::dropAnimation(float time) {
     static vector<bool> startDrop{false, false, false,
                                   false, false, false,
                                   false, true};
 
-    Time elapsed = GameClock->getElapsedTime();
     const float dropStep{400.0f}; 
-    auto offset = dropStep*elapsed.asSeconds();
+    auto offset = dropStep*time;
     const int size(Gem::getSize());
-    for (int row{static_cast<int>(Rows)-1}; row >= 0; --row) {
+    for (int row{this->Rows-1}; row >= 0; --row) {
         if (startDrop.at(row)){
             Vector2f pos = Gems.at(row).at(0)->getPosition();
             // Adjust if offset went too far
@@ -211,7 +177,7 @@ bool Gameboard::initialDrop() {
                 offset = size*row + size/2 - pos.y;
                 startDrop.at(row) = false;
             }
-            for (size_t col{0}; col < Columns; ++col) {
+            for (int col{0}; col < Columns; ++col) {
                     pos = Gems.at(row).at(col)->getPosition();
                     pos.y += offset;
                     Gems.at(row).at(col)->setPosition(pos);
@@ -224,9 +190,7 @@ bool Gameboard::initialDrop() {
         }
     }
 
-    GameClock->restart();
     return Gems.at(0).at(0)->getPosition().y >= size/2;
-
 }
 
 bool Gameboard::loadTextures() {
@@ -239,10 +203,27 @@ bool Gameboard::loadTextures() {
     return true;
 }
 
-void Gameboard::processClick() {
-    if ((GameState & State::InitialGems) == State::InitialGems)
-        return;
+void Gameboard::openingDrop() {
+    unique_ptr<Clock> clock{new Clock()};
+    bool done{false};
+    while (!done && Window->isOpen()) {
+        Event event;
+        while (Window->pollEvent(event)) {
+            if (event.type == Event::Closed) {
+                Window->close();
+            }
+        }
 
+        done = this->dropAnimation(clock->getElapsedTime().asSeconds());
+        clock->restart();
+        Window->clear(Color::Green);
+        Window->draw(*TileMap.get());
+        this->drawBoard();
+        Window->display();
+    }
+}
+
+void Gameboard::processClick() {
     Vector2i mousePosition{Mouse::getPosition(*Window.get())};
     if(this->isGemSelected(mousePosition)) {
         auto indices = this->getMatrixIndices(mousePosition);
@@ -254,31 +235,21 @@ void Gameboard::processClick() {
 
         auto newSelectionPosition = this->getGemPosition(indices);
         
-        if(SelectedGem.x != newSelectionPosition.x ||
-           SelectedGem.y != newSelectionPosition.y) {
-            if (this->areNeighbors(SelectedGem, indices)){
+        if(SelectionIndices.x != newSelectionPosition.x ||
+           SelectionIndices.y != newSelectionPosition.y) {
+            if (this->areNeighbors(SelectionIndices, indices)){
                 
                 // Set to swap gems
-                SwappingGemsList.emplace_back(SelectedGem,
-                                       indices,
-                                       this->getGemPosition(indices),
-                                       this->getGemPosition(SelectedGem));
+                SwapQueue->addToSwap(SelectionIndices, indices);
                 this->getGemPointer(indices)->addState(GemState::Swapping);
-                this->getGemPointer(SelectedGem)->addState(GemState::Swapping);
+                this->getGemPointer(SelectionIndices)->addState(GemState::Swapping);
 
-                SelectedGem.x = -1;
-                SelectedGem.y = -1;
-                // Change State and restart clock if needed
-                GameState ^= State::GemSelected;
-                GameState |= State::GemSwap;
-                if (State::Idle == (GameState & State::Idle)) {
-                    GameClock->restart();
-                }
+                SelectionIndices.x = -1;
+                SelectionIndices.y = -1;
             } else {
                 Selection->setPosition(newSelectionPosition);
-                this->SelectedGem.x = indices.x;
-                this->SelectedGem.y = indices.y;
-                GameState |= State::GemSelected;
+                this->SelectionIndices.x = indices.x;
+                this->SelectionIndices.y = indices.y;
             }
         }
     }
@@ -289,18 +260,7 @@ void Gameboard::swapGemPointers(const sf::Vector2i one, const sf::Vector2i two) 
 }
 
 void Gameboard::update() {
-    if ((GameState & State::InitialGems) == State::InitialGems) {
-        if (this->initialDrop()) 
-            GameState = State::Idle;
-    }
-
-    float timePassed{-1.0f};
-    if ((GameState & State::GemSwap) == State::GemSwap)
-        timePassed = this->swapAnimation();
-
-    if ((GameState & State::DisappearingGems) == State::DisappearingGems)
-        timePassed += this->disappearingAnimation(timePassed);
-
-    if((GameState & State::FallingGems) == State::FallingGems)
-        CascadingGems->update();
+    SwapQueue->update();
+    //VanishQueue->update();
+    //CascadingGems->update();
 }
