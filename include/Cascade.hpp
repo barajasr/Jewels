@@ -14,21 +14,26 @@ namespace sf {
 
 class Gameboard;
 
-typedef std::map<int, std::pair<int, bool >>           CascadingColumns;
-typedef std::map<int, std::pair<int, bool >>::iterator CascadingIterator;
-
 class Cascade {
 private:
+    typedef struct ToFall{
+        bool done;
+        int  rows;
+        ToFall() {
+            done = false;
+            rows = -1;
+        }
+    } ToFall;
     int                        Active{0};
     std::unique_ptr<sf::Clock> CascadeClock;
-    CascadingColumns           Columns;
+    std::vector<ToFall>        Columns;
     
     void swapUp(Gameboard* board, sf::Vector2i indices);
     void finalize(Gameboard* board, int column);
 public:
-    Cascade();
+    Cascade(size_t maxColumns);
     ~Cascade();
-    void addOpenings(Gameboard* board, std::vector<sf::Vector2i>& spots);
+    void addOpennings(Gameboard* board, std::vector<sf::Vector2i>& spots);
     void update(Gameboard* board);
 };
 

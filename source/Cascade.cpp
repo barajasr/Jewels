@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <iostream>
 
 #include <SFML/System/Clock.hpp>
@@ -9,42 +10,57 @@
 using namespace sf;
 using namespace std;
 
-Cascade::Cascade() {
+bool sortVector2i(const Vector2i one, const Vector2i two) {
+    // Sort by col then row
+    if (one.y < two.y)
+        return true;
+    else if (one.y > two.y)
+        return false;
+    else
+        return one.x < two.x;
+}
+
+Cascade::Cascade(const size_t maxColumns) : Columns(maxColumns) {
    CascadeClock = unique_ptr<Clock>(new Clock());
-   for (size_t col{0}; col < 8; ++col) {
-    Columns[col] = pair<int, bool>(-1, false);
-   }
 }
 
 Cascade::~Cascade() = default;
 
-void Cascade::addOpenings(Gameboard* board, vector<Vector2i>& spots) {
+void Cascade::addOpennings(Gameboard* board, vector<Vector2i>& spots) {
     // Assumptions, spots.size() >= 3
+
+    // Sort by column, row increasing
+    sort(spots.begin(), spots.end(), sortVector2i);
     for (auto& indices : spots) {
         // Should reset gem first
         board->getGemPointer(indices)->setScale({1.0f, 1.0f});
         this->swapUp(board, indices);
-        if (indices.x > Columns.at(indices.y).first) {
-            Columns[indices.y] = pair<int, bool>(indices.x, false);
+        if (indices.x > Columns.at(indices.y).rows) {
+            Columns.at(indices.y).rows = indices.x;
+            Columns.at(indices.y).done= false;
         }
     }
 
-    if (this->Active++ == 0) {
+    if (this->Active == 0) {
+        for (auto colPair : Columns) {
+            if (colPair.rows >= 0)
+                this->Active += 1;
+        }
         CascadeClock->restart();
     }
 }
 
 void Cascade::finalize(Gameboard* board, int column) {
     const int size = Gem::getSize();
-    for (int row{Columns.at(column).first}; row >= 0; --row) {
+    for (int row{Columns.at(column).rows}; row >= 0; --row) {
         auto gem = board->getGemPointer({row, column});
         auto pos = gem->getPosition();
         pos.y = size*row + size/2;
         gem->setPosition(pos);
         gem->setState(GemState::Normal);
     }
-    Columns[column].first = -1;
-    Columns[column].second = false;
+    Columns.at(column).rows = -1;
+    Columns.at(column).done = false;
     --this->Active;
 }
 
@@ -52,20 +68,21 @@ void Cascade::update(Gameboard* board) {
     const float step{300.0f};
     float time = this->CascadeClock->getElapsedTime().asSeconds();
 
-    for (CascadingIterator it=Columns.begin(); it != Columns.end(); ++it) {
+    for (size_t column{0}; column < Columns.size(); ++column) {
         auto offset = time * step;
         // Cascade those with sufficients rows to cascade
-        if (it->second.first > 0) {
-            for (int row{it->second.first}; row >= 0; --row) {
-                auto gem = board->getGemPointer({row, it->first});
+        auto& current = this->Columns.at(column);
+        if (current.rows >= 0) {
+            for (int row{current.rows}; row >= 0; --row) {
+                auto gem = board->getGemPointer({row, static_cast<int>(column)});
                 auto pos = gem->getPosition();
                 if (pos.y+offset > (Gem::getSize()*row + Gem::getSize()/2)) {
-                    it->second.second = true;
+                    current.done = true;
                 }
                 gem->setPosition({pos.x, pos.y+offset});
             }
-            if (it->second.second) {
-                this->finalize(board, it->first);
+            if (current.done) {
+                this->finalize(board, column);
             }
         }
     }

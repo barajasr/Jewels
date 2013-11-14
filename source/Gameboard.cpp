@@ -14,16 +14,6 @@
 using namespace std;
 using namespace sf;
 
-bool sortVector2i(const Vector2i one, const Vector2i two) {
-    // Sort by col then row
-    if (one.y < two.y)
-        return true;
-    else if (one.y > two.y)
-        return false;
-    else
-        return one.x < two.x;
-}
-
 Gameboard::Gameboard() : GameState(State::InitialGems) {
     Window = unique_ptr<RenderWindow>(new RenderWindow(VideoMode(Height, Width),
                                                        "Jewels",
@@ -40,7 +30,7 @@ Gameboard::Gameboard() : GameState(State::InitialGems) {
     SelectedGem = Vector2i{-1, -1};
     this->initBoard();
     GameClock = unique_ptr<Clock>(new Clock());
-    CascadingGems = unique_ptr<Cascade>(new Cascade());
+    CascadingGems = unique_ptr<Cascade>(new Cascade(this->Columns));
 }
 
 Gameboard::~Gameboard() = default;
@@ -93,10 +83,9 @@ float Gameboard::disappearingAnimation(float time) {
     }
 
     // Sort by column and add to Cascading set
-    while (DisappearingGemsList.front().done) {
-        auto list = move(DisappearingGemsList.front().indices);
-        sort(list.begin(), list.end(), sortVector2i);
-        CascadingGems->addOpenings(this, list);
+    while (!DisappearingGemsList.empty() && DisappearingGemsList.front().done) {
+        CascadingGems->addOpennings(this, 
+                                    DisappearingGemsList.front().indices);
         DisappearingGemsList.pop_front();
         GameState |= State::FallingGems;
     }
@@ -197,7 +186,11 @@ int Gameboard::generateGem(const IntPair pos, const IntPair leftGems) const{
 }
 
 Gem* Gameboard::getGemPointer(const sf::Vector2i indices) const {
-    return Gems.at(indices.x).at(indices.y).get();
+    if (indices.x >= 0 && indices.x < static_cast<int>(this->Rows)
+       && indices.y >= 0 && indices.y < static_cast<int>(this->Columns))
+        return Gems.at(indices.x).at(indices.y).get();
+
+    return nullptr;
 }
 
 // Returns position (in pixels) of element found at indices (row, col)
@@ -384,6 +377,7 @@ void Gameboard::removeSwappedGems() {
                 this->GameState |= State::DisappearingGems;
                 for (auto& indices : result.second)
                     this->getGemPointer(indices)->addState(GemState::Disappearing);
+
                 DisappearingGemsList.emplace_back(result.second);
             } else {
                 // Reverse the swap just completed
