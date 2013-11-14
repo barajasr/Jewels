@@ -25,8 +25,8 @@ bool Vanish::cascadeQueued() const{
     return !ToCascade.empty();
 }
 
-vector<Vector2i>&& Vanish::getToCascade() {
-    return move(ToCascade);
+vector<Vector2i>& Vanish::getToCascade() {
+    return ToCascade;
 }
 
 void Vanish::update() {

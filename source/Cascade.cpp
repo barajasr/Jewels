@@ -25,7 +25,7 @@ Cascade::Cascade(Gameboard* board, const size_t maxColumns) : Board{board}, Colu
 
 Cascade::~Cascade() = default;
 
-void Cascade::addOpennings(vector<Vector2i>&& spots) {
+void Cascade::addOpennings(vector<Vector2i>& spots) {
     // Assumptions, spots.size() >= 3
     // Sort by column, row increasing
     sort(spots.begin(), spots.end(), sortVector2i);

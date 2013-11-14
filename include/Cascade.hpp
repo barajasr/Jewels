@@ -30,7 +30,7 @@ private:
 public:
     Cascade(Gameboard* board, size_t maxColumns);
     ~Cascade();
-    void addOpennings(std::vector<sf::Vector2i>&& spots);
+    void addOpennings(std::vector<sf::Vector2i>& spots);
     void update();
 };
 
