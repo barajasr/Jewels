@@ -30,7 +30,7 @@ Gameboard::Gameboard() : GameState(State::InitialGems) {
     SelectedGem = Vector2i{-1, -1};
     this->initBoard();
     GameClock = unique_ptr<Clock>(new Clock());
-    CascadingGems = unique_ptr<Cascade>(new Cascade(this->Columns));
+    CascadingGems = unique_ptr<Cascade>(new Cascade(this, this->Columns));
 }
 
 Gameboard::~Gameboard() = default;
@@ -84,8 +84,7 @@ float Gameboard::disappearingAnimation(float time) {
 
     // Sort by column and add to Cascading set
     while (!DisappearingGemsList.empty() && DisappearingGemsList.front().done) {
-        CascadingGems->addOpennings(this, 
-                                    DisappearingGemsList.front().indices);
+        CascadingGems->addOpennings(DisappearingGemsList.front().indices);
         DisappearingGemsList.pop_front();
         GameState |= State::FallingGems;
     }
@@ -482,5 +481,5 @@ void Gameboard::update() {
         timePassed += this->disappearingAnimation(timePassed);
 
     if((GameState & State::FallingGems) == State::FallingGems)
-        CascadingGems->update(this);
+        CascadingGems->update();
 }

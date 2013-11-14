@@ -1,5 +1,4 @@
-#include <algorithm>
-#include <iostream>
+#include <algorithm> 
 
 #include <SFML/System/Clock.hpp>
 
@@ -20,21 +19,21 @@ bool sortVector2i(const Vector2i one, const Vector2i two) {
         return one.x < two.x;
 }
 
-Cascade::Cascade(const size_t maxColumns) : Columns(maxColumns) {
+Cascade::Cascade(Gameboard* board, const size_t maxColumns) : Board(board), Columns{maxColumns} {
    CascadeClock = unique_ptr<Clock>(new Clock());
 }
 
 Cascade::~Cascade() = default;
 
-void Cascade::addOpennings(Gameboard* board, vector<Vector2i>& spots) {
+void Cascade::addOpennings(vector<Vector2i>& spots) {
     // Assumptions, spots.size() >= 3
 
     // Sort by column, row increasing
     sort(spots.begin(), spots.end(), sortVector2i);
     for (auto& indices : spots) {
         // Should reset gem first
-        board->getGemPointer(indices)->setScale({1.0f, 1.0f});
-        this->swapUp(board, indices);
+        Board->getGemPointer(indices)->setScale({1.0f, 1.0f});
+        this->swapUp(indices);
         if (indices.x > Columns.at(indices.y).rows) {
             Columns.at(indices.y).rows = indices.x;
             Columns.at(indices.y).done= false;
@@ -50,10 +49,10 @@ void Cascade::addOpennings(Gameboard* board, vector<Vector2i>& spots) {
     }
 }
 
-void Cascade::finalize(Gameboard* board, int column) {
+void Cascade::finalize(int column) {
     const int size = Gem::getSize();
     for (int row{Columns.at(column).rows}; row >= 0; --row) {
-        auto gem = board->getGemPointer({row, column});
+        auto gem = Board->getGemPointer({row, column});
         auto pos = gem->getPosition();
         pos.y = size*row + size/2;
         gem->setPosition(pos);
@@ -64,7 +63,7 @@ void Cascade::finalize(Gameboard* board, int column) {
     --this->Active;
 }
 
-void Cascade::update(Gameboard* board) {
+void Cascade::update() {
     const float step{300.0f};
     float time = this->CascadeClock->getElapsedTime().asSeconds();
 
@@ -74,7 +73,7 @@ void Cascade::update(Gameboard* board) {
         auto& current = this->Columns.at(column);
         if (current.rows >= 0) {
             for (int row{current.rows}; row >= 0; --row) {
-                auto gem = board->getGemPointer({row, static_cast<int>(column)});
+                auto gem = Board->getGemPointer({row, static_cast<int>(column)});
                 auto pos = gem->getPosition();
                 if (pos.y+offset > (Gem::getSize()*row + Gem::getSize()/2)) {
                     current.done = true;
@@ -82,7 +81,7 @@ void Cascade::update(Gameboard* board) {
                 gem->setPosition({pos.x, pos.y+offset});
             }
             if (current.done) {
-                this->finalize(board, column);
+                this->finalize(column);
             }
         }
     }
@@ -90,16 +89,16 @@ void Cascade::update(Gameboard* board) {
     this->CascadeClock->restart();
 }
 
-void Cascade::swapUp(Gameboard* board, Vector2i indices) {
-    board->getGemPointer(indices)->addState(GemState::Falling);
+void Cascade::swapUp(Vector2i indices) {
+    Board->getGemPointer(indices)->addState(GemState::Falling);
     for (int above{indices.x-1}; above >= 0; --above, --indices.x) {
         Vector2i aboveIndices{above, indices.y};
-        auto gem = board->getGemPointer(indices);
-        auto gemTwo = board->getGemPointer(aboveIndices);
+        auto gem = Board->getGemPointer(indices);
+        auto gemTwo = Board->getGemPointer(aboveIndices);
         gemTwo->addState(GemState::Falling);
         auto newPos = gemTwo->getPosition();
         newPos.y -= Gem::getSize();
         gem->setPosition(newPos);
-        board->swapGemPointers(indices, aboveIndices);
+        Board->swapGemPointers(indices, aboveIndices);
     }
 }

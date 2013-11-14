@@ -2,8 +2,6 @@
 #define __CASCADE_HPP__
 
 #include <memory>
-#include <map>
-#include <utility>
 #include <vector>
 
 #include <SFML/System/Vector2.hpp>
@@ -25,16 +23,17 @@ private:
         }
     } ToFall;
     int                        Active{0};
+    Gameboard*                 Board;
     std::unique_ptr<sf::Clock> CascadeClock;
     std::vector<ToFall>        Columns;
     
-    void swapUp(Gameboard* board, sf::Vector2i indices);
-    void finalize(Gameboard* board, int column);
+    void swapUp(sf::Vector2i indices);
+    void finalize(int column);
 public:
-    Cascade(size_t maxColumns);
+    Cascade(Gameboard* board, size_t maxColumns);
     ~Cascade();
-    void addOpennings(Gameboard* board, std::vector<sf::Vector2i>& spots);
-    void update(Gameboard* board);
+    void addOpennings(std::vector<sf::Vector2i>& spots);
+    void update();
 };
 
 #endif
