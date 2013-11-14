@@ -81,6 +81,10 @@ void Gameboard::gameLoop() {
     }
 }
 
+int Gameboard::generateGem() {
+    return Distribution(Generator);
+}
+
 int Gameboard::generateGem(const IntPair pos, const IntPair leftGems) {
     // [0, 5]
     // Will cause std::out_of_range exception if error
@@ -126,6 +130,13 @@ Vector2i Gameboard::getMatrixIndices(const sf::Vector2i pixels) const {
     return Vector2i(pixels.y/Gem::getSize(), pixels.x/Gem::getSize());
 }
 
+Texture* Gameboard::getTexture(const int id) {
+    if (id >= 0 && id < static_cast<int>(Textures.size()))
+        return Textures.at(id).get();
+
+    return nullptr;
+}
+
 bool Gameboard::isGemSelected(const Vector2i pos) {
     const auto tileBounds = TileMap->getGlobalBounds();
     return  (pos.x > tileBounds.left && pos.x < tileBounds.width
@@ -142,11 +153,12 @@ void Gameboard::initBoard() {
         for (int col{0}; col < this->Columns; ++col) {
             int current = generateGem({col, row}, {first, second});
             unique_ptr<Gem> tmp = unique_ptr<Gem>(new Gem());
-            tmp->setTexture(Textures.at(current).get());
-            tmp->setGemColor(static_cast<GemColor>(current));
+            tmp->setGemColor(static_cast<GemColor>(current),
+                             Textures.at(current).get());
             // Place off board for drop sequence
             // Take into account sprite origin (20, 20)
-            tmp->setPosition(Vector2f(size*col +size/2, -static_cast<int>(size*2)));
+            tmp->setPosition(Vector2f(size*col +size/2,
+                                      -static_cast<int>(size*2)));
             sprites.emplace_back(move(tmp));
             second = first;
             first = current;
