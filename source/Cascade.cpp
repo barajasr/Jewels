@@ -31,6 +31,9 @@ void Cascade::addOpennings(vector<Vector2i>&& spots) {
     sort(spots.begin(), spots.end(), sortVector2i);
     for (auto& indices : spots) {
         // Should reset gem first
+        auto id = static_cast<GemColor>(Board->generateGem());
+        auto texture = Board->getTexture(id);
+        Board->getGemPointer(indices)->setGemColor(id, texture);
         Board->getGemPointer(indices)->setScale({1.0f, 1.0f});
         this->swapUp(indices);
         if (indices.x > Columns.at(indices.y).rows) {
