@@ -19,7 +19,7 @@ bool sortVector2i(const Vector2i one, const Vector2i two) {
         return one.x < two.x;
 }
 
-Cascade::Cascade(Gameboard* board, const size_t maxColumns) : Board(board), Columns{maxColumns} {
+Cascade::Cascade(Gameboard* board, const size_t maxColumns) : Board{board}, Columns{maxColumns} {
    CascadeClock = unique_ptr<Clock>(new Clock());
 }
 

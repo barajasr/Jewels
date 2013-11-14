@@ -15,13 +15,10 @@ class Gameboard;
 class Cascade {
 private:
     typedef struct ToFall{
-        bool done;
-        int  rows;
-        ToFall() {
-            done = false;
-            rows = -1;
-        }
+        bool done{false};
+        int  rows{-1};
     } ToFall;
+
     int                        Active{0};
     Gameboard*                 Board;
     std::unique_ptr<sf::Clock> CascadeClock;

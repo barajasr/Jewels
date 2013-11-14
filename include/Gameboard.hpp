@@ -16,8 +16,9 @@ namespace sf {
     class Texture;
 }
 
-class Gem;
 class Cascade;
+class Gem;
+class Swap;
 
 typedef std::pair<int, int> IntPair;
 typedef std::vector<std::vector<std::unique_ptr<Gem>>> gemVectors;
@@ -42,22 +43,6 @@ private:
         DisappearingList(indicesVector& list) : indices{std::move(list)} {}
     } DisappearingList;
 
-    typedef struct SwappingGems {
-        sf::Vector2i firstGem{-1, -1};
-        sf::Vector2i secondGem{-1, -1};
-        sf::Vector2f firstEndPos{0.0f, 0.0f};
-        sf::Vector2f secondEndPos{0.0f, 0.0f};
-        bool         done{false};
-        bool         toReset{false};
-        SwappingGems(const sf::Vector2i firstIndices, const sf::Vector2i secondIndices, const sf::Vector2f firstEnd, const sf::Vector2f secondEnd)
-            : firstGem{firstIndices}, secondGem{secondIndices}, firstEndPos{firstEnd}, secondEndPos{secondEnd}, done{false}, toReset{false} {}
-
-    } SwappingGems;
-
-    const size_t Columns{8};
-    const size_t Rows{8};
-    const size_t Height{320};
-    const size_t Width{320};
     const std::string                 ResDirectory{"res/"};
     const std::vector<std::string>    TextureFiles = {"blue_gem.png",
                                                       "green_gem.png",
@@ -76,33 +61,28 @@ private:
     sf::Vector2i                      SelectedGem;
     textureVector                     Textures;
     gemVectors                        Gems;
-    std::deque<SwappingGems>          SwappingGemsList;
+    std::deque<Swap>                  SwappingGemsList;
     std::deque<DisappearingList>      DisappearingGemsList;
     std::unique_ptr<Cascade>          CascadingGems;
 
-    std::vector<sf::Vector2i> allMatches(const sf::Vector2i indices);
     bool areNeighbors(const sf::Vector2i first, const sf::Vector2i second) const;
-    void downMatches(sf::Vector2i indices, indicesVector& acc);
     float disappearingAnimation(float time);
     void drawBoard();
-    void finalizeSwap(SwappingGems& gems);
     int generateGem(const IntPair pos, const IntPair leftGems) const;
     sf::Vector2f getGemPosition(const sf::Vector2i indices) const;
     sf::Vector2i getMatrixIndices(const sf::Vector2i pixels) const;
     void initBoard();
     bool initialDrop();
     bool isGemSelected(const sf::Vector2i pos);
-    bool isMatch(const sf::Vector2i indices, const char state);
-    solutionPair isValidSwap(); 
-    void leftMatches(sf::Vector2i indices, indicesVector& acc);
     bool loadTextures();
     void processClick();
-    void removeSwappedGems();
-    void rightMatches(sf::Vector2i indices, indicesVector& acc);
-    float swapAnimation();
-    void upMatches(sf::Vector2i indices, indicesVector& acc);
     void update();
 public:
+    const int Columns{8},
+              Rows{8},
+              Height{320},
+              Width{320};
+
     Gameboard();
     ~Gameboard();
     void gameLoop();
