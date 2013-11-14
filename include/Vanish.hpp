@@ -31,7 +31,7 @@ public:
     ~Vanish();
     void addToVanish(std::vector<sf::Vector2i>&& spots);
     bool cascadeQueued() const;
-    std::vector<sf::Vector2i>&& getCascade();
+    std::vector<sf::Vector2i>&& getToCascade();
     void update();
 };
 

@@ -24,7 +24,7 @@ void Swap::addToSwap(const sf::Vector2i one, const Vector2i two) {
         SwapClock->restart();
 }
 
-std::vector<sf::Vector2i>&& Swap::allMatches(const sf::Vector2i& indices) {
+std::vector<sf::Vector2i> Swap::allMatches(const sf::Vector2i& indices) {
     vector<Vector2i> result{indices},
                      vertical,
                      horizontal;
@@ -39,7 +39,7 @@ std::vector<sf::Vector2i>&& Swap::allMatches(const sf::Vector2i& indices) {
     if(horizontal.size() >= minGoal)
         result.insert(result.end(), horizontal.begin(), horizontal.end());
     
-    return move(result);
+    return result;
 }
 
 void Swap::downMatches(sf::Vector2i indices, indicesVector& acc) {
@@ -53,10 +53,6 @@ void Swap::downMatches(sf::Vector2i indices, indicesVector& acc) {
 
 bool Swap::isMatch(const Vector2i indices, const char color) const {
     return color == Board->getGemPointer(indices)->getGemColor();
-    /*!((gemState & GemState::Swapping) == GemState::Swapping
-        || (gemState & GemState::Disappearing) == GemState::Disappearing
-        || (gemState & GemState::Falling) == GemState::Falling
-        || gem->getGemColor() != color);*/
 }
 
 void Swap::leftMatches(Vector2i indices, indicesVector& acc) {
@@ -97,7 +93,11 @@ void Swap::finalizeSwap(ToSwap& gems) {
     gems.done = true;
 }
 
-pair<bool, vector<Vector2i>>&& Swap::isValidSwap() {
+vector<Vector2i>&& Swap::getToVanish() {
+   return move(ToVanish);
+}
+
+pair<bool, vector<Vector2i>> Swap::isValidSwap() {
     const auto gems = SwapPairs.front();
     pair<bool, vector<Vector2i>> result;
     vector<Vector2i> oneMatches{this->allMatches(gems.firstGem)};
@@ -116,7 +116,7 @@ pair<bool, vector<Vector2i>>&& Swap::isValidSwap() {
                              twoMatches.begin(),
                              twoMatches.end());
     }
-    return move(result);
+    return result;
 }
 
 void Swap::removeSwapped() {
@@ -129,7 +129,7 @@ void Swap::removeSwapped() {
                 // Set state, ready for next animation phase
                 for (auto& indices : result.second) {
                     Board->getGemPointer(indices)->addState(GemState::Disappearing);
-                    //ToVanish.emplace_back(indices);
+                    ToVanish.emplace_back(indices);
                 }
             } else {
                 // Reverse the swap just completed
@@ -145,14 +145,6 @@ void Swap::removeSwapped() {
         }
         SwapPairs.pop_front();
     }
-}
-
-bool Swap::vanishQueued() const {
-    return !ToVanish.empty();
-}
-
-vector<Vector2i>&& Swap::setToVanish() {
-   return move(ToVanish);
 }
 
 void Swap::update() {
@@ -200,4 +192,9 @@ void Swap::update() {
     //    GameState ^= State::GemSwap;
 
     SwapClock->restart();
+}
+
+
+bool Swap::vanishQueued() const {
+    return !ToVanish.empty();
 }

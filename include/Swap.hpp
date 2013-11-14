@@ -30,21 +30,21 @@ private:
     std::deque<ToSwap>         SwapPairs;
     std::vector<sf::Vector2i>  ToVanish;
 
-    std::vector<sf::Vector2i>&& allMatches(const sf::Vector2i& indices);
+    std::vector<sf::Vector2i> allMatches(const sf::Vector2i& indices);
     bool isMatch(const sf::Vector2i indices, const char color) const;
     void downMatches(sf::Vector2i indices, indicesVector& acc);
     void leftMatches(sf::Vector2i indices, indicesVector& acc);
     void rightMatches(sf::Vector2i indices, indicesVector& acc);
     void upMatches(sf::Vector2i indices, indicesVector& acc);
     void finalizeSwap(ToSwap& gems);
-    std::pair<bool, std::vector<sf::Vector2i>>&& isValidSwap();
+    std::pair<bool, std::vector<sf::Vector2i>> isValidSwap();
     void removeSwapped();
 public:
     Swap(Gameboard* board); 
     ~Swap();
     void addToSwap(const sf::Vector2i one, const sf::Vector2i two);
+    std::vector<sf::Vector2i>&& getToVanish();
     bool vanishQueued() const;
-    std::vector<sf::Vector2i>&& setToVanish();
     void update();
 };
 

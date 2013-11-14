@@ -26,10 +26,11 @@ private:
     
     void swapUp(sf::Vector2i indices);
     void finalize(int column);
+
 public:
     Cascade(Gameboard* board, size_t maxColumns);
     ~Cascade();
-    void addOpennings(std::vector<sf::Vector2i>& spots);
+    void addOpennings(std::vector<sf::Vector2i>&& spots);
     void update();
 };
 

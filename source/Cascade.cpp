@@ -25,9 +25,8 @@ Cascade::Cascade(Gameboard* board, const size_t maxColumns) : Board{board}, Colu
 
 Cascade::~Cascade() = default;
 
-void Cascade::addOpennings(vector<Vector2i>& spots) {
+void Cascade::addOpennings(vector<Vector2i>&& spots) {
     // Assumptions, spots.size() >= 3
-
     // Sort by column, row increasing
     sort(spots.begin(), spots.end(), sortVector2i);
     for (auto& indices : spots) {
@@ -40,6 +39,8 @@ void Cascade::addOpennings(vector<Vector2i>& spots) {
         }
     }
 
+    // Passed by ref from Vanish::ToCascade, empty it
+    spots.clear();
     if (this->Active == 0) {
         for (auto colPair : Columns) {
             if (colPair.rows >= 0)
@@ -89,6 +90,8 @@ void Cascade::update() {
     this->CascadeClock->restart();
 }
 
+// Take the highest opening from column and swaps unique_ptrs with one above
+// until  reaches row 0, continue until no more openings to swap in column.
 void Cascade::swapUp(Vector2i indices) {
     Board->getGemPointer(indices)->addState(GemState::Falling);
     for (int above{indices.x-1}; above >= 0; --above, --indices.x) {

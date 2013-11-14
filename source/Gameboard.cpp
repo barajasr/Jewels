@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <iostream>
 
 #include <SFML/Graphics/RenderWindow.hpp>
 #include <SFML/Graphics/Sprite.hpp>
@@ -49,10 +48,8 @@ bool Gameboard::areNeighbors(const Vector2i first, const Vector2i second) const 
 
 void Gameboard::drawBoard() {
     for (auto& row : Gems)
-        for (auto& gem : row) {
-            if (gem->getGemColor() != GemColor::None)
-                gem->draw(Window.get());
-        }
+        for (auto& gem : row)
+            gem->draw(Window.get());
 
     if (SelectionIndices.x > -1)
         Window->draw(*Selection.get());
@@ -261,6 +258,13 @@ void Gameboard::swapGemPointers(const sf::Vector2i one, const sf::Vector2i two) 
 
 void Gameboard::update() {
     SwapQueue->update();
-    //VanishQueue->update();
-    //CascadingGems->update();
+    if (SwapQueue->vanishQueued()) {
+        VanishQueue->addToVanish(SwapQueue->getToVanish());
+    }
+
+    VanishQueue->update();
+    if (VanishQueue->cascadeQueued())
+        CascadingGems->addOpennings(VanishQueue->getToCascade());
+        
+    CascadingGems->update();
 }
