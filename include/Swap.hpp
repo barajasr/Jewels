@@ -43,6 +43,7 @@ public:
     Swap(Gameboard* board); 
     ~Swap();
     void addToSwap(const sf::Vector2i one, const sf::Vector2i two);
+    void checkMatchesFromCascade(std::vector<sf::Vector2i>& indices);
     std::vector<sf::Vector2i>&& getToVanish();
     bool vanishQueued() const;
     void update();

@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include <SFML/System/Clock.hpp>
 
 #include "../include/Gameboard.hpp"
@@ -16,6 +18,8 @@ void Swap::addToSwap(const sf::Vector2i one, const Vector2i two) {
 
     auto gemOne = Board->getGemPointer(one);
     auto gemTwo = Board->getGemPointer(two);
+    gemOne->addState(GemState::Swapping);
+    gemTwo->addState(GemState::Swapping);
     SwapPairs.emplace_back(one, two,
                            gemTwo->getPosition(), gemOne->getPosition());
 
@@ -42,40 +46,21 @@ std::vector<sf::Vector2i> Swap::allMatches(const sf::Vector2i& indices) {
     return result;
 }
 
+void Swap::checkMatchesFromCascade(vector<Vector2i>& indices) { 
+    const size_t goal{3};
+    for (auto& spot : indices) {
+        auto matches = move(this->allMatches(spot));
+        if (!matches.empty() && matches.size() >= goal)
+            for (auto& match : matches)
+                ToVanish.emplace_back(match);
+    }
+    // Passed by ref from Cascade::ToMatch
+    indices.clear();
+}
+
 void Swap::downMatches(sf::Vector2i indices, indicesVector& acc) {
     const auto color = Board->getGemPointer(indices)->getGemColor();
     for (++indices.x; indices.x < Board->Rows; ++indices.x) {
-        if (!this->isMatch(indices, color))
-            break;
-        acc.emplace_back(indices);
-    }
-}
-
-bool Swap::isMatch(const Vector2i indices, const char color) const {
-    return color == Board->getGemPointer(indices)->getGemColor();
-}
-
-void Swap::leftMatches(Vector2i indices, indicesVector& acc) {
-    const auto color = Board->getGemPointer(indices)->getGemColor();
-    for (--indices.y; indices.y >= 0; --indices.y) {
-        if (!this->isMatch(indices, color))
-            break;
-        acc.emplace_back(indices);
-    }
-}
-
-void Swap::rightMatches(Vector2i indices, indicesVector& acc) {
-    const auto color = Board->getGemPointer(indices)->getGemColor();
-    for (++indices.y; indices.y < Board->Columns; ++indices.y) {
-        if (!this->isMatch(indices, color))
-            break;
-        acc.emplace_back(indices);
-    }
-}
-
-void Swap::upMatches(Vector2i indices, indicesVector& acc) {
-    const auto color = Board->getGemPointer(indices)->getGemColor();
-    for (--indices.x; indices.x >= 0; --indices.x) {
         if (!this->isMatch(indices, color))
             break;
         acc.emplace_back(indices);
@@ -95,6 +80,15 @@ void Swap::finalizeSwap(ToSwap& gems) {
 
 vector<Vector2i>&& Swap::getToVanish() {
    return move(ToVanish);
+}
+
+bool Swap::isMatch(const Vector2i indices, const char color) const {
+    auto gem = Board->getGemPointer(indices);
+    auto state = gem->getState();
+    return (color == gem->getGemColor()
+           && (state & GemState::Swapping) != GemState::Swapping
+           && (state & GemState::Disappearing) != GemState::Disappearing
+           && (state & GemState::Falling) != GemState::Falling);
 }
 
 pair<bool, vector<Vector2i>> Swap::isValidSwap() {
@@ -117,6 +111,15 @@ pair<bool, vector<Vector2i>> Swap::isValidSwap() {
                              twoMatches.end());
     }
     return result;
+}
+
+void Swap::leftMatches(Vector2i indices, indicesVector& acc) {
+    const auto color = Board->getGemPointer(indices)->getGemColor();
+    for (--indices.y; indices.y >= 0; --indices.y) {
+        if (!this->isMatch(indices, color))
+            break;
+        acc.emplace_back(indices);
+    }
 }
 
 void Swap::removeSwapped() {
@@ -144,6 +147,24 @@ void Swap::removeSwapped() {
             }
         }
         SwapPairs.pop_front();
+    }
+}
+
+void Swap::rightMatches(Vector2i indices, indicesVector& acc) {
+    const auto color = Board->getGemPointer(indices)->getGemColor();
+    for (++indices.y; indices.y < Board->Columns; ++indices.y) {
+        if (!this->isMatch(indices, color))
+            break;
+        acc.emplace_back(indices);
+    }
+}
+
+void Swap::upMatches(Vector2i indices, indicesVector& acc) {
+    const auto color = Board->getGemPointer(indices)->getGemColor();
+    for (--indices.x; indices.x >= 0; --indices.x) {
+        if (!this->isMatch(indices, color))
+            break;
+        acc.emplace_back(indices);
     }
 }
 

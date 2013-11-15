@@ -72,7 +72,7 @@ void Gem::removeState(const GemState state) {
 void Gem::scale(const Vector2f& factors) {
    GemSprite->scale(factors);
 }
-void Gem::setGemColor(const GemColor color, Texture* texture) {
+void Gem::setGemColor(const GemColor color, const Texture* texture) {
     this->Color = color;
     GemSprite->setTexture(*texture);
 }

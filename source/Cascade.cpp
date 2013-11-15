@@ -32,7 +32,7 @@ void Cascade::addOpennings(vector<Vector2i>&& spots) {
     for (auto& indices : spots) {
         // Should reset gem first
         auto id = static_cast<GemColor>(Board->generateGem());
-        auto texture = Board->getTexture(id);
+        const Texture* texture = Board->getTexture(id);
         Board->getGemPointer(indices)->setGemColor(id, texture);
         Board->getGemPointer(indices)->setScale({1.0f, 1.0f});
         this->swapUp(indices);
@@ -61,12 +61,21 @@ void Cascade::finalize(int column) {
         pos.y = size*row + size/2;
         gem->setPosition(pos);
         gem->setState(GemState::Normal);
+
+        ToMatch.emplace_back(row, column);
     }
     Columns.at(column).rows = -1;
     Columns.at(column).done = false;
     --this->Active;
 }
 
+vector<Vector2i>& Cascade::toCheckForMatches() {
+    return ToMatch;
+}
+
+bool Cascade::toCheckForMatchesQueued() const {
+    return !ToMatch.empty();
+}
 void Cascade::update() {
     const float step{300.0f};
     float time = this->CascadeClock->getElapsedTime().asSeconds();
