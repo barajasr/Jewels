@@ -130,7 +130,7 @@ Vector2i Gameboard::getMatrixIndices(const sf::Vector2i pixels) const {
     return Vector2i(pixels.y/Gem::getSize(), pixels.x/Gem::getSize());
 }
 
-Texture* Gameboard::getTexture(const int id) {
+const Texture* Gameboard::getTexture(const int id) const {
     if (id >= 0 && id < static_cast<int>(Textures.size()))
         return Textures.at(id).get();
 
@@ -250,8 +250,6 @@ void Gameboard::processClick() {
                 
                 // Set to swap gems
                 SwapQueue->addToSwap(SelectionIndices, indices);
-                this->getGemPointer(indices)->addState(GemState::Swapping);
-                this->getGemPointer(SelectionIndices)->addState(GemState::Swapping);
 
                 SelectionIndices.x = -1;
                 SelectionIndices.y = -1;
@@ -279,4 +277,6 @@ void Gameboard::update() {
         CascadingGems->addOpennings(VanishQueue->getToCascade());
         
     CascadingGems->update();
+    if (CascadingGems->toCheckForMatchesQueued())
+        SwapQueue->checkMatchesFromCascade(CascadingGems->toCheckForMatches());
 }

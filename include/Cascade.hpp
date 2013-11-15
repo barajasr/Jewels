@@ -23,6 +23,7 @@ private:
     Gameboard*                 Board;
     std::unique_ptr<sf::Clock> CascadeClock;
     std::vector<ToFall>        Columns;
+    std::vector<sf::Vector2i>  ToMatch;
     
     void swapUp(sf::Vector2i indices);
     void finalize(int column);
@@ -30,7 +31,9 @@ private:
 public:
     Cascade(Gameboard* board, size_t maxColumns);
     ~Cascade();
-    void addOpennings(std::vector<sf::Vector2i>& spots);
+    void addOpennings(std::vector<sf::Vector2i>&& spots);
+    std::vector<sf::Vector2i>& toCheckForMatches();
+    bool toCheckForMatchesQueued() const;
     void update();
 };
 

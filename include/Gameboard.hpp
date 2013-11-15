@@ -75,7 +75,7 @@ public:
     ~Gameboard();
     void gameLoop();
     int generateGem();
-    sf::Texture* getTexture(const int id);
+    const sf::Texture* getTexture(const int id) const;
     Gem* getGemPointer(const sf::Vector2i indices) const;
     void swapGemPointers(const sf::Vector2i one, const sf::Vector2i two);
 };

@@ -51,7 +51,7 @@ public:
     const sf::Texture* getTexture() const;
     void removeState(const GemState toRemove);
     void scale(const sf::Vector2f& factors);
-    void setGemColor(const GemColor color, sf::Texture* texture);
+    void setGemColor(const GemColor color, const sf::Texture* texture);
     void setPosition(const sf::Vector2f& pos);
     void setScale(const sf::Vector2f& scale);
     void setState(const GemState state);
