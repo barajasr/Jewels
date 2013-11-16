@@ -14,14 +14,16 @@ Swap::Swap(Gameboard* board) : Board{board}, SwapClock{unique_ptr<Clock>(new Clo
 Swap::~Swap() = default;
 
 void Swap::addToSwap(const sf::Vector2i one, const Vector2i two) {
-    bool restartClock = !SwapPairs.empty();
+    bool restartClock = SwapPairs.empty();
 
     auto gemOne = Board->getGemPointer(one);
     auto gemTwo = Board->getGemPointer(two);
     gemOne->addState(GemState::Swapping);
     gemTwo->addState(GemState::Swapping);
-    SwapPairs.emplace_back(one, two,
-                           gemTwo->getPosition(), gemOne->getPosition());
+    SwapPairs.emplace_back(one,
+                           two,
+                           gemTwo->getPosition(),
+                           gemOne->getPosition());
 
     // Maybe clock has been not called for a long time
     if (restartClock)
