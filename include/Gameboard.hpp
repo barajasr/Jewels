@@ -43,6 +43,7 @@ private:
     std::mt19937_64                    Generator;
     std::uniform_int_distribution<int> Distribution;
     std::unique_ptr<sf::RenderWindow>  Window;
+    std::unique_ptr<sf::Sprite>        Icon;
     std::unique_ptr<sf::Sprite>        TileMap;
     std::unique_ptr<sf::Sprite>        Selection;
     sf::Vector2i                       SelectionIndices;

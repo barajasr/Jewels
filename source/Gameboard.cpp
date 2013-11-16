@@ -9,6 +9,7 @@
 #include "../include/Cascade.hpp"
 #include "../include/Gameboard.hpp"
 #include "../include/Gem.hpp"
+#include "../include/Icon.hpp"
 #include "../include/Swap.hpp"
 #include "../include/Vanish.hpp"
 
@@ -19,6 +20,8 @@ Gameboard::Gameboard() : Generator{Rand()}, Distribution(GemColor::Blue, GemColo
     Window = unique_ptr<RenderWindow>(new RenderWindow(VideoMode(Height, Width),
                                                        "Jewels",
                                                        sf::Style::Close));
+    Window->setIcon(icon_image.width, icon_image.height, icon_image.pixel_data);
+
     if (!this->loadTextures()) {
         Error = true;
         return;
