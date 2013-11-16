@@ -51,8 +51,11 @@ void Swap::checkMatchesFromCascade(vector<Vector2i>& indices) {
     for (auto& spot : indices) {
         auto matches = move(this->allMatches(spot));
         if (!matches.empty() && matches.size() >= goal)
-            for (auto& match : matches)
+            for (auto& match : matches) {
+                Board->getGemPointer(match)
+                     ->addState(GemState::Disappearing);
                 ToVanish.emplace_back(match);
+            }
     }
     // Passed by ref from Cascade::ToMatch
     indices.clear();
@@ -131,7 +134,8 @@ void Swap::removeSwapped() {
                 // Valid move completed
                 // Set state, ready for next animation phase
                 for (auto& indices : result.second) {
-                    Board->getGemPointer(indices)->addState(GemState::Disappearing);
+                    Board->getGemPointer(indices)
+                         ->addState(GemState::Disappearing);
                     ToVanish.emplace_back(indices);
                 }
             } else {
@@ -209,9 +213,6 @@ void Swap::update() {
     }
 
     this->removeSwapped();
-    //if (SwapPairs.empty())
-    //    GameState ^= State::GemSwap;
-
     SwapClock->restart();
 }
 

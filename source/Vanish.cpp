@@ -47,6 +47,13 @@ void Vanish::update() {
 
         while (!VanishSet.empty() && VanishSet.front().done) {
             vector<Vector2i> indices{move(VanishSet.front().indices)};
+            // Ready for next animation
+            for (auto& pos : indices) {
+                Board->getGemPointer(pos)
+                     ->removeState(GemState::Disappearing);
+                Board->getGemPointer(pos)
+                     ->addState(GemState::Falling);
+            }
             if (ToCascade.empty()) {
                 ToCascade = move(indices);
             } else {
