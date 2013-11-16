@@ -16,7 +16,7 @@ $(ODIR)/Main.o: $(SDIR)/Main.cpp $(IDIR)/Gameboard.hpp
 	$(CC) $(CFLAGS) -c $(SDIR)/Main.cpp
 	mv Main.o $(ODIR)
 
-$(ODIR)/Gameboard.o: $(SDIR)/Gameboard.cpp $(IDIR)/Gameboard.hpp $(IDIR)/Cascade.hpp $(IDIR)/Gem.hpp $(IDIR)/Swap.hpp $(IDIR)/Vanish.hpp
+$(ODIR)/Gameboard.o: $(SDIR)/Gameboard.cpp $(IDIR)/Gameboard.hpp $(IDIR)/Icon.hpp $(IDIR)/Cascade.hpp $(IDIR)/Gem.hpp $(IDIR)/Swap.hpp $(IDIR)/Vanish.hpp
 	$(CC) $(CFLAGS) -c $(SDIR)/Gameboard.cpp
 	mv Gameboard.o $(ODIR)
 

@@ -105,7 +105,6 @@ void Cascade::update() {
 // Take the highest opening from column and swaps unique_ptrs with one above
 // until  reaches row 0, continue until no more openings to swap in column.
 void Cascade::swapUp(Vector2i indices) {
-    Board->getGemPointer(indices)->addState(GemState::Falling);
     for (int above{indices.x-1}; above >= 0; --above, --indices.x) {
         Vector2i aboveIndices{above, indices.y};
         auto gem = Board->getGemPointer(indices);

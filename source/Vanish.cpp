@@ -29,6 +29,23 @@ vector<Vector2i>& Vanish::getToCascade() {
     return ToCascade;
 }
 
+void Vanish::removeVanished() {
+    while (!VanishSet.empty() && VanishSet.front().done) {
+        vector<Vector2i> indices{move(VanishSet.front().indices)};
+        // Ready for next animation
+        for (auto& pos : indices) {
+            Board->getGemPointer(pos)->removeState(GemState::Disappearing);
+            Board->getGemPointer(pos)->addState(GemState::Falling);
+        }
+        if (ToCascade.empty()) {
+            ToCascade = move(indices);
+        } else {
+            ToCascade.insert(ToCascade.end(), indices.begin(), indices.end());
+        }
+        VanishSet.pop_front();
+    }
+}
+
 void Vanish::update() {
     if (!VanishSet.empty()) {
         float time = VanishClock->getElapsedTime().asSeconds();
@@ -45,15 +62,7 @@ void Vanish::update() {
             }
         }
 
-        while (!VanishSet.empty() && VanishSet.front().done) {
-            vector<Vector2i> indices{move(VanishSet.front().indices)};
-            if (ToCascade.empty()) {
-                ToCascade = move(indices);
-            } else {
-                ToCascade.insert(ToCascade.end(), indices.begin(), indices.end());
-            }
-            VanishSet.pop_front();
-        }
+        this->removeVanished();
         VanishClock->restart();
     }
 }

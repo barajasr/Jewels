@@ -26,6 +26,8 @@ private:
     std::deque<ToVanish>       VanishSet;
     std::vector<sf::Vector2i>  ToCascade;
 
+    void removeVanished();
+
 public:
     Vanish(Gameboard* board);
     ~Vanish();
