@@ -69,9 +69,11 @@ void Gameboard::gameLoop() {
         while (Window->pollEvent(event)) {
             if (event.type == Event::Closed) {
                 Window->close();
-            } else if(event.type == Event::MouseButtonPressed) {
+            } else if (event.type == Event::MouseButtonPressed) {
                 if (Mouse::isButtonPressed(Mouse::Button::Left))
-                    this->processClick();
+                    this->processClick(true);
+            } else if (event.type == Event::MouseButtonReleased) {
+                    this->processClick(false);
             }
         }
 
@@ -205,6 +207,35 @@ bool Gameboard::dropAnimation(float time) {
     return Gems.at(0).at(0)->getPosition().y >= size/2;
 }
 
+void Gameboard::gemSelection(const Vector2i mousePosition, const bool leftPress) {
+    auto indices = this->getMatrixIndices(mousePosition);
+    char state = Gems.at(indices.x).at(indices.y)->getState();
+    if ((state & GemState::Disappearing) == GemState::Disappearing
+       || (state & GemState::Falling) == GemState::Falling
+       || (state & GemState::Swapping) == GemState::Swapping)
+        return;
+
+    auto newSelectionPosition = this->getGemPosition(indices);
+    
+    if(SelectionIndices.x != newSelectionPosition.x ||
+       SelectionIndices.y != newSelectionPosition.y) {
+        if (this->areNeighbors(SelectionIndices, indices)){
+            
+            // Set to swap gems
+            SwapQueue->addToSwap(SelectionIndices, indices);
+
+            SelectionIndices.x = -1;
+            SelectionIndices.y = -1;
+        } else {
+            if (!leftPress)
+                return;
+            Selection->setPosition(newSelectionPosition);
+            this->SelectionIndices.x = indices.x;
+            this->SelectionIndices.y = indices.y;
+        }
+    }
+}
+
 bool Gameboard::loadTextures() {
     // Load gem images
     for (const auto& filename : TextureFiles) {
@@ -235,33 +266,10 @@ void Gameboard::openingDrop() {
     }
 }
 
-void Gameboard::processClick() {
+void Gameboard::processClick(const bool leftPress) {
     Vector2i mousePosition{Mouse::getPosition(*Window.get())};
     if(this->isGemSelected(mousePosition)) {
-        auto indices = this->getMatrixIndices(mousePosition);
-        char state = Gems.at(indices.x).at(indices.y)->getState();
-        if ((state & GemState::Disappearing) == GemState::Disappearing
-           || (state & GemState::Falling) == GemState::Falling
-           || (state & GemState::Swapping) == GemState::Swapping)
-            return;
-
-        auto newSelectionPosition = this->getGemPosition(indices);
-        
-        if(SelectionIndices.x != newSelectionPosition.x ||
-           SelectionIndices.y != newSelectionPosition.y) {
-            if (this->areNeighbors(SelectionIndices, indices)){
-                
-                // Set to swap gems
-                SwapQueue->addToSwap(SelectionIndices, indices);
-
-                SelectionIndices.x = -1;
-                SelectionIndices.y = -1;
-            } else {
-                Selection->setPosition(newSelectionPosition);
-                this->SelectionIndices.x = indices.x;
-                this->SelectionIndices.y = indices.y;
-            }
-        }
+        this->gemSelection(mousePosition, leftPress);
     }
 }
 

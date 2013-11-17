@@ -54,6 +54,7 @@ private:
 
     bool areNeighbors(const sf::Vector2i first, const sf::Vector2i second) const;
     void drawBoard();
+    void gemSelection(const sf::Vector2i mousePosition, const bool leftPress);
     int generateGem(const IntPair pos, const IntPair leftGems);
     sf::Vector2f getGemPosition(const sf::Vector2i indices) const;
     sf::Vector2i getMatrixIndices(const sf::Vector2i pixels) const;
@@ -62,7 +63,7 @@ private:
     bool isGemSelected(const sf::Vector2i pos);
     bool loadTextures();
     void openingDrop();
-    void processClick();
+    void processClick(const bool leftPress);
     void update();
 
 public:

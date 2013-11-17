@@ -9,6 +9,9 @@ APP=Jewels
 
 all: $(APP)
 
+run: $(APP)
+	./$(APP)
+
 $(APP): $(ODIR)/Cascade.o $(ODIR)/Swap.o $(ODIR)/Vanish.o $(ODIR)/Gem.o $(ODIR)/Gameboard.o $(ODIR)/Main.o
 	$(CC) -o $(APP) $(ODIR)/*.o $(LIBS) $(LSFML)
 
