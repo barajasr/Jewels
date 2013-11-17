@@ -5,6 +5,7 @@
 #include "../include/Cascade.hpp"
 #include "../include/Gameboard.hpp"
 #include "../include/Gem.hpp"
+#include "../include/Resources.hpp"
 
 using namespace sf;
 using namespace std;
@@ -32,7 +33,7 @@ void Cascade::addOpenings(vector<Vector2i>& spots) {
     for (auto& indices : spots) {
         // Should reset gem first
         auto id = static_cast<GemColor>(Board->generateGem());
-        const Texture* texture = Board->getTexture(id);
+        const Texture* texture = Board->ResourceManager->getGemTexture(id);
         Board->getGemPointer(indices)->setGemColor(id, texture);
         Board->getGemPointer(indices)->setScale({1.0f, 1.0f});
         this->swapUp(indices);

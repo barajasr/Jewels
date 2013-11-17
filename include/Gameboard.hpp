@@ -18,6 +18,7 @@ namespace sf {
 
 class Cascade;
 class Gem;
+class Resources;
 class Swap;
 class Vanish;
 
@@ -25,19 +26,9 @@ typedef std::pair<int, int> IntPair;
 typedef std::vector<std::vector<std::unique_ptr<Gem>>> gemVectors;
 typedef std::vector<sf::Vector2i>                      indicesVector;
 typedef std::pair<bool, std::vector<sf::Vector2i>>     solutionPair;
-typedef std::vector<std::unique_ptr<sf::Texture>>      textureVector;
 
 class Gameboard {
 private:
-    const std::string                 ResDirectory{"res/"};
-    const std::vector<std::string>    TextureFiles = {"blue_gem.png",
-                                                      "green_gem.png",
-                                                      "orange_gem.png",
-                                                      "purple_gem.png",
-                                                      "red_gem.png",
-                                                      "white_gem.png",
-                                                      "selected.png",
-                                                      "tile_board_transparent.png"};
     bool                               Error{false};
     std::random_device                 Rand;
     std::mt19937_64                    Generator;
@@ -46,7 +37,6 @@ private:
     std::unique_ptr<sf::Sprite>        TileMap;
     std::unique_ptr<sf::Sprite>        Selection;
     sf::Vector2i                       SelectionIndices;
-    textureVector                      Textures;
     gemVectors                         Gems;
     std::unique_ptr<Cascade>           CascadingGems;
     std::unique_ptr<Swap>              SwapQueue;
@@ -61,7 +51,6 @@ private:
     void initBoard();
     bool dropAnimation(float time);
     bool isGemSelected(const sf::Vector2i pos);
-    bool loadTextures();
     void openingDrop();
     void processClick(const bool leftPress);
     void update();
@@ -71,6 +60,7 @@ public:
               Rows{8},
               Height{320},
               Width{320};
+    std::unique_ptr<Resources> ResourceManager;
 
     Gameboard();
     ~Gameboard();

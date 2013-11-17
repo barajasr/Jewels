@@ -10,6 +10,7 @@
 #include "../include/Gameboard.hpp"
 #include "../include/Gem.hpp"
 #include "../include/Icon.hpp"
+#include "../include/Resources.hpp"
 #include "../include/Swap.hpp"
 #include "../include/Vanish.hpp"
 
@@ -22,13 +23,13 @@ Gameboard::Gameboard() : Generator{Rand()}, Distribution(GemColor::Blue, GemColo
                                                        sf::Style::Close));
     Window->setIcon(icon_image.width, icon_image.height, icon_image.pixel_data);
 
-    if (!this->loadTextures()) {
-        Error = true;
+    ResourceManager = unique_ptr<Resources>(new Resources());
+    Error = !ResourceManager->hasLoadedSuccessfully();
+    if (Error)
         return;
-    }
 
-    TileMap = unique_ptr<Sprite>(new Sprite(*Textures.back().get()));
-    Selection = unique_ptr<Sprite>(new Sprite(*Textures.at(Textures.size()-2).get()));
+    TileMap = unique_ptr<Sprite>(new Sprite(*ResourceManager->getTileMapTexture()));
+    Selection = unique_ptr<Sprite>(new Sprite(*ResourceManager->getSelectedTexture()));
     // Match gems' origin, for simplicity
     Selection->setOrigin(Vector2f(Gem::getSize()/2, Gem::getSize()/2));
     SelectionIndices = Vector2i{-1, -1};
@@ -135,13 +136,6 @@ Vector2i Gameboard::getMatrixIndices(const sf::Vector2i pixels) const {
     return Vector2i(pixels.y/Gem::getSize(), pixels.x/Gem::getSize());
 }
 
-const Texture* Gameboard::getTexture(const int id) const {
-    if (id >= 0 && id < static_cast<int>(Textures.size()))
-        return Textures.at(id).get();
-
-    return nullptr;
-}
-
 bool Gameboard::isGemSelected(const Vector2i pos) {
     const auto tileBounds = TileMap->getGlobalBounds();
     return  (pos.x > tileBounds.left && pos.x < tileBounds.width
@@ -159,7 +153,7 @@ void Gameboard::initBoard() {
             int current = generateGem({col, row}, {first, second});
             unique_ptr<Gem> tmp = unique_ptr<Gem>(new Gem());
             tmp->setGemColor(static_cast<GemColor>(current),
-                             Textures.at(current).get());
+                             ResourceManager->getGemTexture(current));
             // Place off board for drop sequence
             // Take into account sprite origin (20, 20)
             tmp->setPosition(Vector2f(size*col +size/2,
@@ -234,16 +228,6 @@ void Gameboard::gemSelection(const Vector2i mousePosition, const bool leftPress)
             this->SelectionIndices.y = indices.y;
         }
     }
-}
-
-bool Gameboard::loadTextures() {
-    // Load gem images
-    for (const auto& filename : TextureFiles) {
-        Textures.emplace_back(new Texture());
-        if (!Textures.back()->loadFromFile(ResDirectory + filename))
-            return false;
-    }
-    return true;
 }
 
 void Gameboard::openingDrop() {
