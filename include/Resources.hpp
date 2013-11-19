@@ -14,7 +14,13 @@ typedef std::unique_ptr<sf::Texture> UniqueTexture;
 class Resources {
 private:
     const std::string                 ResDirectory{"res/"};
-    const std::vector<std::string>    BackgroundFilenames{};
+    const std::vector<std::string>    BackgroundFilenames{"lone_tree_in_dark.png",
+                                                          "baby_chameleon.png",
+                                                          "ink.png",
+                                                          "goodnight_tale.png",
+                                                          "eruption.png",
+                                                          "elizabeth.png",
+                                                          "dark_sky.png"};
     const std::vector<std::string>    GemFilenames{"blue_gem.png",
                                                    "green_gem.png",
                                                    "orange_gem.png",

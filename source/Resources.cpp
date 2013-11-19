@@ -39,6 +39,17 @@ bool Resources::hasLoadedSuccessfully() const {
 
 bool Resources::loadTextures() {
     try {    
+        for (const auto& filename : BackgroundFilenames) {
+            BackgroundTextures.emplace_back(unique_ptr<Texture>(new Texture()));
+            if (!BackgroundTextures.back()->loadFromFile(ResDirectory + filename))
+                return false;
+        }
+    } catch (const bad_alloc& except) {
+        cerr << "Resources::BackgroundTextures allocation: " << except.what() << endl;
+        return false;
+    }
+
+    try {    
         for (const auto& filename : GemFilenames) {
             GemTextures.emplace_back(unique_ptr<Texture>(new Texture()));
             if (!GemTextures.back()->loadFromFile(ResDirectory + filename))

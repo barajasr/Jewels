@@ -28,7 +28,9 @@ Gameboard::Gameboard() : Generator{Rand()}, Distribution(GemColor::Blue, GemColo
     if (Error)
         return;
 
+    Background = unique_ptr<Sprite>(new Sprite(*ResourceManager->getBackgroundTexture(0)));
     TileMap = unique_ptr<Sprite>(new Sprite(*ResourceManager->getTileMapTexture()));
+    TileMap->setPosition(TileMapCorner);
     Selection = unique_ptr<Sprite>(new Sprite(*ResourceManager->getSelectedTexture()));
     // Match gems' origin, for simplicity
     Selection->setOrigin(Vector2f(Gem::getSize()/2, Gem::getSize()/2));
@@ -80,7 +82,7 @@ void Gameboard::gameLoop() {
 
         this->update();
 
-        Window->clear(Color::Green);
+        Window->draw(*Background.get());
         Window->draw(*TileMap.get());
         this->drawBoard();
         Window->display();
@@ -133,13 +135,14 @@ Vector2f Gameboard::getGemPosition(const sf::Vector2i indices) const{
 
 // Given (x,y) pixels coordinate, return (row, col) of Gem location
 Vector2i Gameboard::getMatrixIndices(const sf::Vector2i pixels) const {
-    return Vector2i(pixels.y/Gem::getSize(), pixels.x/Gem::getSize());
+    return Vector2i((pixels.y-TileMapCorner.y)/Gem::getSize(),
+                    (pixels.x-TileMapCorner.x)/Gem::getSize());
 }
 
 bool Gameboard::isGemSelected(const Vector2i pos) {
     const auto tileBounds = TileMap->getGlobalBounds();
-    return  (pos.x > tileBounds.left && pos.x < tileBounds.width
-             && pos.y > tileBounds.top && pos.y < tileBounds.height);
+    return  (pos.x > tileBounds.left && pos.x < tileBounds.width + tileBounds.left
+             && pos.y > tileBounds.top && pos.y < tileBounds.height + tileBounds.top);
 }
 
 void Gameboard::initBoard() {
@@ -156,8 +159,8 @@ void Gameboard::initBoard() {
                              ResourceManager->getGemTexture(current));
             // Place off board for drop sequence
             // Take into account sprite origin (20, 20)
-            tmp->setPosition(Vector2f(size*col +size/2,
-                                      -static_cast<int>(size*2)));
+            tmp->setPosition(Vector2f(size*col + TileMapCorner.x + size/2,
+                                      TileMapCorner.y - size*2));
             sprites.emplace_back(move(tmp));
             second = first;
             first = current;
@@ -182,7 +185,7 @@ bool Gameboard::dropAnimation(float time) {
             // Adjust if offset went too far
             // Take into account sprite origin (20, 20)
             if (pos.y + offset >= size*row + size/2) {
-                offset = size*row + size/2 - pos.y;
+                offset = size*row + size/2 + TileMapCorner.y - pos.y;
                 startDrop.at(row) = false;
             }
             for (int col{0}; col < Columns; ++col) {
@@ -243,7 +246,7 @@ void Gameboard::openingDrop() {
 
         done = this->dropAnimation(clock->getElapsedTime().asSeconds());
         clock->restart();
-        Window->clear(Color::Green);
+        Window->draw(*Background.get());
         Window->draw(*TileMap.get());
         this->drawBoard();
         Window->display();

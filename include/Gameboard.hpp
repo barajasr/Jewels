@@ -34,6 +34,7 @@ private:
     std::mt19937_64                    Generator;
     std::uniform_int_distribution<int> Distribution;
     std::unique_ptr<sf::RenderWindow>  Window;
+    std::unique_ptr<sf::Sprite>        Background;
     std::unique_ptr<sf::Sprite>        TileMap;
     std::unique_ptr<sf::Sprite>        Selection;
     sf::Vector2i                       SelectionIndices;
@@ -58,8 +59,9 @@ private:
 public:
     const int Columns{8},
               Rows{8},
-              Height{320},
-              Width{320};
+              Height{400},
+              Width{400};
+    const sf::Vector2f TileMapCorner{40.f, 10.0f};
     std::unique_ptr<Resources> ResourceManager;
 
     Gameboard();

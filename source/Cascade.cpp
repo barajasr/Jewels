@@ -59,7 +59,7 @@ void Cascade::finalize(int column) {
     for (int row{Columns.at(column).rows}; row >= 0; --row) {
         auto gem = Board->getGemPointer({row, column});
         auto pos = gem->getPosition();
-        pos.y = size*row + size/2;
+        pos.y = size*row + size/2 + Board->TileMapCorner.y;
         gem->setPosition(pos);
         gem->setState(GemState::Normal);
 
@@ -89,7 +89,7 @@ void Cascade::update() {
             for (int row{current.rows}; row >= 0; --row) {
                 auto gem = Board->getGemPointer({row, static_cast<int>(column)});
                 auto pos = gem->getPosition();
-                if (pos.y+offset > (Gem::getSize()*row + Gem::getSize()/2)) {
+                if (pos.y+offset > (Gem::getSize()*row + Gem::getSize()/2 + Board->TileMapCorner.y)) {
                     current.done = true;
                 }
                 gem->setPosition({pos.x, pos.y+offset});
