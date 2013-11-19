@@ -54,6 +54,7 @@ void Swap::checkMatchesFromCascade(vector<Vector2i>& indices) {
         auto matches = move(this->allMatches(spot));
         if (!matches.empty() && matches.size() >= goal)
             for (auto& match : matches) {
+                Board->invalidateSelectedIfConflict(match);
                 Board->getGemPointer(match)
                      ->addState(GemState::Disappearing);
                 ToVanish.emplace_back(match);

@@ -141,8 +141,10 @@ Vector2i Gameboard::getMatrixIndices(const sf::Vector2i pixels) const {
 
 bool Gameboard::isGemSelected(const Vector2i pos) {
     const auto tileBounds = TileMap->getGlobalBounds();
-    return  (pos.x > tileBounds.left && pos.x < tileBounds.width + tileBounds.left
-             && pos.y > tileBounds.top && pos.y < tileBounds.height + tileBounds.top);
+    return  (pos.x > tileBounds.left 
+             && pos.x < tileBounds.width + tileBounds.left
+             && pos.y > tileBounds.top 
+             && pos.y < tileBounds.height + tileBounds.top);
 }
 
 void Gameboard::initBoard() {
@@ -169,6 +171,10 @@ void Gameboard::initBoard() {
     }
 }
 
+void Gameboard::invalidateSelectedIfConflict(const Vector2i indices) {
+    if (indices.x == SelectionIndices.x && indices.y == SelectionIndices.y)
+        SelectionIndices = {-1, -1};
+}
 // Takes float of time since last called
 // Returns whether animation is complete
 bool Gameboard::dropAnimation(float time) {

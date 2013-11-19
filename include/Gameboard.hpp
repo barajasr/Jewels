@@ -70,6 +70,7 @@ public:
     int generateGem();
     const sf::Texture* getTexture(const int id) const;
     Gem* getGemPointer(const sf::Vector2i indices) const;
+    void invalidateSelectedIfConflict(const sf::Vector2i indices);
     void swapGemPointers(const sf::Vector2i one, const sf::Vector2i two);
 };
 
