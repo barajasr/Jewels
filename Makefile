@@ -42,7 +42,7 @@ $(ODIR)/Score.o: $(SDIR)/Score.cpp $(IDIR)/Score.hpp
 	$(CXX) $(CFLAGS) -c -o $@ $<
 
 $(ODIR)/Swap.o: $(SDIR)/Swap.cpp $(IDIR)/Swap.hpp \
-    $(IDIR)/Gameboard.hpp $(IDIR)/Gem.hpp
+    $(IDIR)/Gameboard.hpp $(IDIR)/Gem.hpp $(IDIR)/Score.hpp
 	$(CXX) $(CFLAGS) -c -o $@ $<
 
 $(ODIR)/Vanish.o: $(SDIR)/Vanish.cpp $(IDIR)/Vanish.hpp \
