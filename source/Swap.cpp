@@ -47,7 +47,8 @@ std::vector<sf::Vector2i> Swap::allMatches(const sf::Vector2i& indices) {
         result.insert(result.end(), horizontal.begin(), horizontal.end());
 
     if (result.size() > minGoal)
-        Board->Scoreboard->incrementScore(result.size());
+        Board->Scoreboard->incrementScore(result.size(),
+                                          Board->getGemPointer(indices)->getPosition());
     
     return result;
 }

@@ -10,7 +10,7 @@
 using namespace std;
 using namespace sf;
 
-Score::Score(const sf::Texture* backTexture, const sf::Font* font, const sf::Vector2f position) {
+Score::Score(const sf::Texture* backTexture, const sf::Font* font, const sf::Vector2f position) : FontType(font) {
     Background = unique_ptr<Sprite>(new Sprite(*backTexture));
     PointsText = unique_ptr<Text>(new Text(Zeros, *font, 18));
     PointsTitle = unique_ptr<Text>(new Text("Points", *font, 14));
@@ -24,13 +24,26 @@ Score::Score(const sf::Texture* backTexture, const sf::Font* font, const sf::Vec
 
 Score::~Score() = default;
 
-void Score::draw(RenderWindow* window) {
-   window->draw(*Background.get());
-   window->draw(*PointsText.get());
-   window->draw(*PointsTitle.get());
+void Score::addGemScoreToBoard(const int score, const sf::Vector2f gemPosition) {
+    auto flashScore = GemScore();
+    flashScore.gemScore = unique_ptr<Text>(new Text("+" + to_string(score), *FontType, 18));
+    flashScore.gemScore->setPosition({gemPosition.x+10, gemPosition.y-25});
+    flashScore.gemScore->setStyle(Text::Style::Bold);
+    flashScore.gemScore->setColor(Color::Black);
+    flashScore.gemScoreClock = unique_ptr<Clock>(new Clock());
+    GemScores.emplace_back(move(flashScore));
 }
 
-void Score::incrementScore(const int gemCount) {
+void Score::draw(RenderWindow* window) {
+    window->draw(*Background.get());
+    window->draw(*PointsText.get());
+    window->draw(*PointsTitle.get());
+
+    for (auto& score : GemScores)
+        window->draw(*score.gemScore.get());
+}
+
+void Score::incrementScore(const int gemCount, const sf::Vector2f originGem) {
     int multiplier = 100;
     if (gemCount == 4) {
         multiplier = 125;
@@ -40,6 +53,7 @@ void Score::incrementScore(const int gemCount) {
         multiplier = 175;
     }
     ToAdd.emplace_back(gemCount * multiplier);
+    this->addGemScoreToBoard(gemCount * multiplier, originGem);
 }
 
 void Score::update() {
@@ -57,5 +71,9 @@ void Score::update() {
         int prefix = Zeros.size() - NewPoints.size();
         PointsText->setString(Zeros.substr(0, prefix) + NewPoints);
     }
+
+    while (!GemScores.empty() 
+           && GemScores.front().gemScoreClock->getElapsedTime().asSeconds() > 1.25f)
+        GemScores.pop_front();
     
 }
