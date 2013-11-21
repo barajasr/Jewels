@@ -16,7 +16,8 @@ $(ODIR):
 	mkdir -p $@
 
 $(APP): $(ODIR)/Cascade.o $(ODIR)/Gameboard.o $(ODIR)/Gem.o \
-    $(ODIR)/Main.o $(ODIR)/Resources.o $(ODIR)/Swap.o $(ODIR)/Vanish.o
+    $(ODIR)/Main.o $(ODIR)/Resources.o $(ODIR)/Score.o $(ODIR)/Swap.o \
+    $(ODIR)/Vanish.o
 	$(CXX) -o $@ $^ $(LIBS) $(LSFML)
  
 $(ODIR)/Cascade.o: $(SDIR)/Cascade.cpp $(IDIR)/Cascade.hpp \
@@ -25,7 +26,7 @@ $(ODIR)/Cascade.o: $(SDIR)/Cascade.cpp $(IDIR)/Cascade.hpp \
 
 $(ODIR)/Gameboard.o: $(SDIR)/Gameboard.cpp $(IDIR)/Gameboard.hpp \
     $(IDIR)/Cascade.hpp $(IDIR)/Gem.hpp $(IDIR)/Icon.hpp $(IDIR)/Resources.hpp \
-    $(IDIR)/Swap.hpp $(IDIR)/Vanish.hpp
+    $(IDIR)/Score.hpp $(IDIR)/Swap.hpp $(IDIR)/Vanish.hpp
 	$(CXX) $(CFLAGS) -c -o $@ $<
 
 $(ODIR)/Gem.o: $(SDIR)/Gem.cpp $(IDIR)/Gem.hpp
@@ -35,6 +36,9 @@ $(ODIR)/Main.o: $(SDIR)/Main.cpp $(IDIR)/Gameboard.hpp
 	$(CXX) $(CFLAGS) -c -o $@ $<
 
 $(ODIR)/Resources.o: $(SDIR)/Resources.cpp $(IDIR)/Resources.hpp
+	$(CXX) $(CFLAGS) -c -o $@ $<
+
+$(ODIR)/Score.o: $(SDIR)/Score.cpp $(IDIR)/Score.hpp
 	$(CXX) $(CFLAGS) -c -o $@ $<
 
 $(ODIR)/Swap.o: $(SDIR)/Swap.cpp $(IDIR)/Swap.hpp \

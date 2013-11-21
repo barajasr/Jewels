@@ -19,6 +19,7 @@ namespace sf {
 class Cascade;
 class Gem;
 class Resources;
+class Score;
 class Swap;
 class Vanish;
 
@@ -63,6 +64,7 @@ public:
               Width{400};
     const sf::Vector2f TileMapCorner{40.f, 10.0f};
     std::unique_ptr<Resources> ResourceManager;
+    std::unique_ptr<Score>     Scoreboard;
 
     Gameboard();
     ~Gameboard();

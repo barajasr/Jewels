@@ -2,6 +2,7 @@
 #include <iostream>
 
 #include <SFML/Graphics/Texture.hpp>
+#include <SFML/Graphics/Font.hpp>
 
 #include "../include/Resources.hpp"
 
@@ -10,6 +11,10 @@ using namespace sf;
 
 Resources::Resources() {
     Error = !this->loadTextures();
+
+    FontType = unique_ptr<Font>(new Font());
+    if (!FontType->loadFromFile(ResDirectory + FontFilename))
+        Error = true;
 }
 
 Resources::~Resources() = default;
@@ -20,10 +25,18 @@ const Texture* Resources::getBackgroundTexture(int id) const {
     return nullptr;
 }
 
+const Font* Resources::getFont() const {
+    return FontType.get();
+}
+
 const Texture* Resources::getGemTexture(int id) const {
     if (id < static_cast<int>(GemTextures.size()))
         return GemTextures.at(id).get();
     return nullptr;
+}
+
+const Texture* Resources::getScoreTexture() const {
+    return ScoreTexture.get();
 }
 
 const Texture* Resources::getSelectedTexture() const {
@@ -59,9 +72,17 @@ bool Resources::loadTextures() {
         cerr << "Resources::GemTextures allocation: " << except.what() << endl;
         return false;
     }
+
+    try {
+        ScoreTexture = unique_ptr<Texture>(new Texture());
+        if (!ScoreTexture->loadFromFile(ResDirectory + ScoreFilename))
+            return false;
+    } catch (const bad_alloc& except) {
+        cerr << "Resources::ScoreTexture allocation: " << except.what() << endl;
+    }
     
     try {
-        SelectedTexture = move(unique_ptr<Texture>(new Texture()));
+        SelectedTexture = unique_ptr<Texture>(new Texture());
         if (!SelectedTexture->loadFromFile(ResDirectory + SelectedFilename))
             return false;
     } catch (const bad_alloc& except) {

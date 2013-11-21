@@ -11,6 +11,7 @@
 #include "../include/Gem.hpp"
 #include "../include/Icon.hpp"
 #include "../include/Resources.hpp"
+#include "../include/Score.hpp"
 #include "../include/Swap.hpp"
 #include "../include/Vanish.hpp"
 
@@ -28,7 +29,7 @@ Gameboard::Gameboard() : Generator{Rand()}, Distribution(GemColor::Blue, GemColo
     if (Error)
         return;
 
-    Background = unique_ptr<Sprite>(new Sprite(*ResourceManager->getBackgroundTexture(0)));
+    Background = unique_ptr<Sprite>(new Sprite(*ResourceManager->getBackgroundTexture(3)));
     TileMap = unique_ptr<Sprite>(new Sprite(*ResourceManager->getTileMapTexture()));
     TileMap->setPosition(TileMapCorner);
     Selection = unique_ptr<Sprite>(new Sprite(*ResourceManager->getSelectedTexture()));
@@ -37,6 +38,10 @@ Gameboard::Gameboard() : Generator{Rand()}, Distribution(GemColor::Blue, GemColo
     SelectionIndices = Vector2i{-1, -1};
 
     this->initBoard();
+
+    Scoreboard = unique_ptr<Score>(new Score(ResourceManager->getScoreTexture(),
+                                             ResourceManager->getFont(),
+                                             {225.0f, 340.0f}));
 
     CascadingGems = unique_ptr<Cascade>(new Cascade(this, this->Columns));
     SwapQueue = unique_ptr<Swap>(new Swap(this));
@@ -85,6 +90,7 @@ void Gameboard::gameLoop() {
         Window->draw(*Background.get());
         Window->draw(*TileMap.get());
         this->drawBoard();
+        Scoreboard->draw(Window.get());
         Window->display();
     }
 }
@@ -283,4 +289,7 @@ void Gameboard::update() {
     CascadingGems->update();
     if (CascadingGems->toCheckForMatchesQueued())
         SwapQueue->checkMatchesFromCascade(CascadingGems->toCheckForMatches());
+
+    Scoreboard->update();
+
 }

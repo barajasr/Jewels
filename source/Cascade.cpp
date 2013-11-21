@@ -88,6 +88,7 @@ void Cascade::update() {
         if (current.rows >= 0) {
             for (int row{current.rows}; row >= 0; --row) {
                 auto gem = Board->getGemPointer({row, static_cast<int>(column)});
+                Board->invalidateSelectedIfConflict({row, static_cast<int>(column)});
                 auto pos = gem->getPosition();
                 if (pos.y+offset > (Gem::getSize()*row + Gem::getSize()/2 + Board->TileMapCorner.y)) {
                     current.done = true;

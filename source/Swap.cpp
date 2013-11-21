@@ -4,6 +4,7 @@
 
 #include "../include/Gameboard.hpp"
 #include "../include/Gem.hpp"
+#include "../include/Score.hpp"
 #include "../include/Swap.hpp"
 
 using namespace sf;
@@ -44,6 +45,9 @@ std::vector<sf::Vector2i> Swap::allMatches(const sf::Vector2i& indices) {
         result.insert(result.end(), vertical.begin(), vertical.end());
     if(horizontal.size() >= minGoal)
         result.insert(result.end(), horizontal.begin(), horizontal.end());
+
+    if (result.size() > minGoal)
+        Board->Scoreboard->incrementScore(result.size());
     
     return result;
 }
@@ -54,7 +58,6 @@ void Swap::checkMatchesFromCascade(vector<Vector2i>& indices) {
         auto matches = move(this->allMatches(spot));
         if (!matches.empty() && matches.size() >= goal)
             for (auto& match : matches) {
-                Board->invalidateSelectedIfConflict(match);
                 Board->getGemPointer(match)
                      ->addState(GemState::Disappearing);
                 ToVanish.emplace_back(match);
