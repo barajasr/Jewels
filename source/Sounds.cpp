@@ -30,7 +30,7 @@ Sounds::Sounds(const Resources* resources) {
 
 Sounds::~Sounds() = default;
 
-void Sounds::playCascade(const int level=0) {
+void Sounds::playCascade(const int level) {
     switch(level){
     default:
     case 0:

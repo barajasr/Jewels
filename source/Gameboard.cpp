@@ -295,8 +295,9 @@ void Gameboard::update() {
     }
 
     VanishQueue->update();
-    if (VanishQueue->cascadeQueued())
+    if (VanishQueue->cascadeQueued()) {
         CascadingGems->addOpenings(VanishQueue->getToCascade());
+    }
         
     CascadingGems->update();
     if (CascadingGems->toCheckForMatchesQueued())
