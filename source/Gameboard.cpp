@@ -12,6 +12,7 @@
 #include "../include/Icon.hpp"
 #include "../include/Resources.hpp"
 #include "../include/Score.hpp"
+#include "../include/Sounds.hpp"
 #include "../include/Swap.hpp"
 #include "../include/Vanish.hpp"
 
@@ -46,6 +47,8 @@ Gameboard::Gameboard() : Generator{Rand()}, Distribution(GemColor::Blue, GemColo
     CascadingGems = unique_ptr<Cascade>(new Cascade(this, this->Columns));
     SwapQueue = unique_ptr<Swap>(new Swap(this));
     VanishQueue = unique_ptr<Vanish>(new Vanish(this));
+
+    GameSounds = unique_ptr<Sounds>(new Sounds(ResourceManager.get()));
 }
 
 Gameboard::~Gameboard() = default;
@@ -263,6 +266,15 @@ void Gameboard::openingDrop() {
         this->drawBoard();
         Window->display();
     }
+}
+
+void Gameboard::playMatchSound(const int gemCount) {
+    const int goal{3};
+    GameSounds->playMatch(goal == gemCount);
+}
+
+void Gameboard::playSwapbackSound() {
+    GameSounds->playSwapback();
 }
 
 void Gameboard::processClick(const bool leftPress) {

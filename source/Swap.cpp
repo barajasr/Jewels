@@ -46,9 +46,11 @@ std::vector<sf::Vector2i> Swap::allMatches(const sf::Vector2i& indices) {
     if(horizontal.size() >= minGoal)
         result.insert(result.end(), horizontal.begin(), horizontal.end());
 
-    if (result.size() > minGoal)
+    if (result.size() > minGoal) {
+        Board->playMatchSound(result.size());
         Board->Scoreboard->incrementScore(result.size(),
                                           Board->getGemPointer(indices)->getPosition());
+    }
     
     return result;
 }
@@ -155,6 +157,8 @@ void Swap::removeSwapped() {
                     ->addState(GemState::Swapping);
                 Board->getGemPointer(justSwapped.secondGem)
                     ->addState(GemState::Swapping);
+                // Reset swap sound
+                Board->playSwapbackSound();
             }
         }
         SwapPairs.pop_front();

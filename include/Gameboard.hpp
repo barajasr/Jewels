@@ -20,6 +20,7 @@ class Cascade;
 class Gem;
 class Resources;
 class Score;
+class Sounds;
 class Swap;
 class Vanish;
 
@@ -43,6 +44,7 @@ private:
     std::unique_ptr<Cascade>           CascadingGems;
     std::unique_ptr<Swap>              SwapQueue;
     std::unique_ptr<Vanish>            VanishQueue;
+    std::unique_ptr<Sounds>            GameSounds;
 
     bool areNeighbors(const sf::Vector2i first, const sf::Vector2i second) const;
     void drawBoard();
@@ -73,6 +75,8 @@ public:
     const sf::Texture* getTexture(const int id) const;
     Gem* getGemPointer(const sf::Vector2i indices) const;
     void invalidateSelectedIfConflict(const sf::Vector2i indices);
+    void playMatchSound(const int gemCount);
+    void playSwapbackSound();
     void swapGemPointers(const sf::Vector2i one, const sf::Vector2i two);
 };
 
